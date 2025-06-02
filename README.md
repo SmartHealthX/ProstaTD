@@ -10,8 +10,27 @@
 
 ProstaTD is a large-scale surgical triplet detection dataset curated from 21 robot-assisted prostatectomy videos, collectively spanning full surgical procedures across multiple institutions, featuring 60,529 annotated frames with 165,567 structured surgical triplet instances (instrument-verb-target) that provide precise bounding box localization for all instruments alongside clinically validated temporal action boundaries. The dataset incorporates the [ESAD](https://saras-esad.grand-challenge.org/download/) and [PSI-AVA](https://github.com/BCV-Uniandes/TAPIR) datasets with our own added annotations (without using the original data annotations). We also include our own collected videos. It delivers instance-level annotations for 7 instrument types, 10 actions, 10 anatomical/non-anatomical targets, and 89 triplet combinations (excluding background). The dataset is partitioned into training (14 videos), validation (2 videos), and test sets (5 videos), with annotations provided at 1 frame per second.
 
-### Dataset format:
-Our dataset format is: [triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h]. In the current release, the track id, triplet track id, cx, cy, w, and h have not been officially released yet and are temporarily replaced with the value -1. They will be released soon.
+### Dataset Format
+The dataset is structured as 10-value tuples [triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h] with the following fields:
+
+| Position | Field Name        | Description                                                                 | Current Status               |
+|---------|-------------------|-----------------------------------------------------------------------------|-------------------------------|
+| 0       | Triplet ID        | Unique identifier for the (instrument, verb, target) triplet                | **Available**                |
+| 1       | Instrument ID     | Identifier for the instrument (subject) in the triplet                     | **Available**                |
+| 2       | Verb ID           | Identifier for the action verb connecting instrument and target             | **Available**                |
+| 3       | Target ID         | Identifier for the target (object) in the triplet                           | **Available**                |
+| 4       | Track ID          | Unique identifier for instrument tracking in video                          | *Pending (temporary: `-1`)* |
+| 5       | Triplet Track ID  | Unique identifier for full triplet instance tracking                        | *Pending (temporary: `-1`)* |
+| 6       | cx                | Normalized bounding box center x-coordinate (0-1 range)                     | *Pending (temporary: `-1`)* |
+| 7       | cy                | Normalized bounding box center y-coordinate (0-1 range)                     | *Pending (temporary: `-1`)* |
+| 8       | w                 | Normalized bounding box width (0-1 range)                                  | *Pending (temporary: `-1`)* |
+| 9       | h                 | Normalized bounding box height (0-1 range)                                 | *Pending (temporary: `-1`)* |
+
+**Key Notes:**
+1. Positions 1-4 contain currently available data
+2. Positions 5-10 will be released in a future update
+3. All pending fields currently use placeholder value `-1`
+4. Bounding box coordinates (cx, cy, w, h) are normalized to [0,1] range relative to frame dimensions
 
 ### Contact: 
 To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
