@@ -17,7 +17,7 @@ Our dataset format is: [triplet id, instrument id, verb id, target id, track id,
 To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
 
 ### Download Access:
-To request access to the ProstaTD Dataset, please fill out our [request form].
+To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L9).
 
 ## News
 - [ **02/06/2025** ]: Release of the ProstaTDv1.1 dataset on GitHub, which includes minor annotation corrections.
@@ -32,5 +32,10 @@ To request access to the ProstaTD Dataset, please fill out our [request form].
 - ⭕️ Release track ID annotations
 - ⭕️ Release raw LabelMe JSON files and annotation tool for visualization
 
+## Usage Restrictions
+The dataset and its annotations are intended for academic research purposes only and must not be used for commercial purposes. If the dataset is used to train models or LLMs, the output must include a warning prompt stating that the results are generated based on experimental data and should not be used for actual surgical environment without further validation. Additionally, these models must be used under human supervision to ensure safety and accuracy.
+
 ## License
 This repository is available for non-commercial scientific research purposes as defined in the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+
