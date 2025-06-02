@@ -15,16 +15,16 @@ The dataset is structured as 10-value tuples [triplet id, instrument id, verb id
 
 | Position | Field Name        | Description                                                                 | Current Status               |
 |---------|-------------------|-----------------------------------------------------------------------------|-------------------------------|
-| 0       | Triplet ID        | Unique identifier for the (instrument, verb, target) triplet                | **Available**                |
-| 1       | Instrument ID     | Identifier for the instrument (subject) in the triplet                     | **Available**                |
-| 2       | Verb ID           | Identifier for the action verb connecting instrument and target             | **Available**                |
-| 3       | Target ID         | Identifier for the target (object) in the triplet                           | **Available**                |
-| 4       | Track ID          | Unique identifier for instrument tracking in video                          | *Pending (temporary: `-1`)* |
-| 5       | Triplet Track ID  | Unique identifier for full triplet instance tracking                        | *Pending (temporary: `-1`)* |
-| 6       | cx                | Normalized bounding box center x-coordinate (0-1 range)                     | *Pending (temporary: `-1`)* |
-| 7       | cy                | Normalized bounding box center y-coordinate (0-1 range)                     | *Pending (temporary: `-1`)* |
-| 8       | w                 | Normalized bounding box width (0-1 range)                                  | *Pending (temporary: `-1`)* |
-| 9       | h                 | Normalized bounding box height (0-1 range)                                 | *Pending (temporary: `-1`)* |
+| 0       | Triplet ID        | Unique identifier for the (instrument, verb, target) triplet                | **Available**                 |
+| 1       | Instrument ID     | Identifier for the instrument (subject) in the triplet                     | **Available**                  |
+| 2       | Verb ID           | Identifier for the action verb connecting instrument and target             | **Available**                 |
+| 3       | Target ID         | Identifier for the target (object) in the triplet                           | **Available**                 |
+| 4       | Track ID          | Unique identifier for instrument tracking in video                          | *Pending*                     |
+| 5       | Triplet Track ID  | Unique identifier for full triplet instance tracking                        | *Pending*                     |
+| 6       | cx                | Normalized bounding box center x-coordinate (0-1 range)                     | *Pending*                     |
+| 7       | cy                | Normalized bounding box center y-coordinate (0-1 range)                     | *Pending*                     |
+| 8       | w                 | Normalized bounding box width (0-1 range)                                  | *Pending*                      |
+| 9       | h                 | Normalized bounding box height (0-1 range)                                 | *Pending*                      |
 
 **Key Notes:**
 1. Positions 1-4 contain currently available data
