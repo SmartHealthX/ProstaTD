@@ -27,8 +27,8 @@ The dataset is structured as 10-value tuples [triplet id, instrument id, verb id
 | 9       | h                 | Normalized bounding box height (0-1 range)                                 | *Pending*                      |
 
 **Key Notes:**
-1. Positions 1-4 contain currently available data
-2. Positions 5-10 will be released in a future update
+1. Positions 0-3 contain currently available data
+2. Positions 4-9 will be released soon
 3. All pending fields currently use placeholder value `-1`
 4. Bounding box coordinates (cx, cy, w, h) are normalized to [0,1] range relative to frame dimensions
 
