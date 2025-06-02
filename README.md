@@ -11,7 +11,7 @@
 ProstaTD is a large-scale surgical triplet detection dataset curated from 21 robot-assisted prostatectomy videos, collectively spanning full surgical procedures across multiple institutions, featuring 60,529 annotated frames with 165,567 structured surgical triplet instances (instrument-verb-target) that provide precise bounding box localization for all instruments alongside clinically validated temporal action boundaries. The dataset incorporates the [ESAD](https://saras-esad.grand-challenge.org/download/) and [PSI-AVA](https://github.com/BCV-Uniandes/TAPIR) datasets with our own added annotations (without using the original data annotations). We also include our own collected videos. It delivers instance-level annotations for 7 instrument types, 10 actions, 10 anatomical/non-anatomical targets, and 89 triplet combinations (excluding background). The dataset is partitioned into training (14 videos), validation (2 videos), and test sets (5 videos), with annotations provided at 1 frame per second.
 
 ### Dataset Format
-The dataset is structured as 10-value tuples [triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h] with the following fields:
+The dataset is structured as 10-value tuples [triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h]:
 
 | Position | Field Name        | Description                                                                 | Current Status               |
 |---------|-------------------|-----------------------------------------------------------------------------|-------------------------------|
