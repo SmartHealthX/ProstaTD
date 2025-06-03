@@ -3,6 +3,9 @@
 ### **ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection**
 *Yiliang Chen, Zhixi Li, Cheng Xu, Alex Qinyang Liu, Xuemiao Xu, Jeremy Yuen-Chun Teoh, Shengfeng He, Jing Qin*
 
+[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=plastic)](https://arxiv.org/pdf/2506.01130)
+
+
 ## Abstract
 <div align="center">
   <img src="images/dataset.png" width="100%"/>
@@ -36,7 +39,7 @@ The dataset is structured as 10-value tuples [triplet id, instrument id, verb id
 To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
 
 ### Download Access:
-To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L).
+To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L9).
 
 ## News
 - [ **02/06/2025** ]: Release of the ProstaTDv1.1 dataset on GitHub, which includes minor annotation corrections.
@@ -70,5 +73,15 @@ The dataset and its annotations are intended for academic research purposes only
 
 ## License
 This repository is available for non-commercial scientific research purposes as defined in the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+## Citation
+```bibtex
+@article{chen2025prostatd,
+  title     = {ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection},
+  author    = {Chen, Yiliang and Li, Zhixi and Xu, Cheng and Liu, Alex Qinyang and Xu, Xuemiao and Teoh, Jeremy Yuen-Chun and He, Shengfeng and Qin, Jing},
+  journal   = {arXiv preprint arXiv:2506.01130},
+  year      = {2025}
+}
+```
 
 
