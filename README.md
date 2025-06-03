@@ -14,7 +14,7 @@
 ProstaTD is a large-scale surgical triplet detection dataset curated from 21 robot-assisted prostatectomy videos, collectively spanning full surgical procedures across multiple institutions, featuring 60,529 annotated frames with 165,567 structured surgical triplet instances (instrument-verb-target) that provide precise bounding box localization for all instruments alongside clinically validated temporal action boundaries. The dataset incorporates the [ESAD](https://saras-esad.grand-challenge.org/download/) and [PSI-AVA](https://github.com/BCV-Uniandes/TAPIR) datasets with our own added annotations (without using the original data annotations). We also include our own collected videos. It delivers instance-level annotations for 7 instrument types, 10 actions, 10 anatomical/non-anatomical targets, and 89 triplet combinations (excluding background). The dataset is partitioned into training (14 videos), validation (2 videos), and test sets (5 videos), with annotations provided at 1 frame per second.
 
 ### Dataset Format
-The dataset is structured as 10-value tuples [triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h]:
+Each frame in each video of the dataset is structured as 10-value tuples - "frame id":[triplet id, instrument id, verb id, target id, track id, triplet track id, cx, cy, w, h]:
 
 | Position | Field Name        | Description                                                                 | Current Status               |
 |---------|-------------------|-----------------------------------------------------------------------------|-------------------------------|
@@ -34,6 +34,7 @@ The dataset is structured as 10-value tuples [triplet id, instrument id, verb id
 2. Positions 4-9 will be released soon
 3. All pending fields currently use placeholder value `-1`
 4. Bounding box coordinates (cx, cy, w, h) are normalized to [0,1] range relative to frame dimensions
+5. Some frames were removed due to non-surgical scenes or adverse environmental factors (e.g., extreme reflection); overall, the frames are visually continuous​
 
 ### Contact: 
 To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
