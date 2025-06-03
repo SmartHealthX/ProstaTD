@@ -3,7 +3,7 @@
 ### **ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection**
 *Yiliang Chen, Zhixi Li, Cheng Xu, Alex Qinyang Liu, Xuemiao Xu, Jeremy Yuen-Chun Teoh, Shengfeng He, Jing Qin*
 
-[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=plastic)](https://arxiv.org/pdf/2506.01130)
+[![arXiv](https://img.shields.io/badge/arXiv-2506.01130-b31b1b.svg?style=plastic)](https://arxiv.org/pdf/2506.01130)
 
 
 ## Abstract
