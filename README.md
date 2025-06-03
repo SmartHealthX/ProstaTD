@@ -42,7 +42,7 @@ To report errors or suggest improvements, please open an issue on our GitHub rep
 To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L9).
 
 **Important Notes:**  
-🔹 **Recommended Email**: Advice use **Gmail**​​ for submission (other emails may trigger spam filters). <br>
+🔹 **Recommended Email**: Advice use **Gmail**​​ for submission (other emails may find the reply in spam folders). <br>
 🔹 **Response Time**: If you haven't received access instructions within **one hour**, please send a follow-up email to us with subject "ProstaTD Access Request - [Your Name]". We'll manually process your request and send the download link within **2 business days**. 
 
 ## News
