@@ -82,11 +82,14 @@ This repository is available for non-commercial scientific research purposes as 
 
 ## Citation
 ```bibtex
-@article{chen2025prostatd,
-  title     = {ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection},
-  author    = {Chen, Yiliang and Li, Zhixi and Xu, Cheng and Liu, Alex Qinyang and Xu, Xuemiao and Teoh, Jeremy Yuen-Chun and He, Shengfeng and Qin, Jing},
-  journal   = {arXiv preprint arXiv:2506.01130},
-  year      = {2025}
+@misc{chen2025prostatd,
+      title={ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection}, 
+      author={Yiliang Chen and Zhixi Li and Cheng Xu and Alex Qinyang Liu and Xuemiao Xu and Jeremy Yuen-Chun Teoh and Shengfeng He and Jing Qin},
+      year={2025},
+      eprint={2506.01130},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2506.01130}, 
 }
 ```
 
