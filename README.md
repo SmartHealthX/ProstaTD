@@ -73,6 +73,8 @@ To request access to the ProstaTD Dataset, please fill out our [request form](ht
   </tr>
 </table>
 
+Some classification results of our ProstaTD (Prostate21) can be found at [SurgVISTA](https://arxiv.org/pdf/2506.02692)
+
 
 ## Usage Restrictions
 The dataset and its annotations are intended for academic research purposes only and must not be used for commercial purposes. If the dataset is used to train models or LLMs, the output must include a warning prompt stating that the results are generated based on experimental data and should not be used for actual surgical environment without further validation. Additionally, these models must be used under human supervision to ensure safety and accuracy.
