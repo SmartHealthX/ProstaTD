@@ -4,7 +4,7 @@ An extended metrics package for surgical triplet detection, based on [ivtmetrics
 
 ## Overview
 
-**IVTDMetrics** This package addresses and fixes several calculation errors in the original ivtmetrics detection module, and provide more accurate evaluation metrics for surgical triplet detection.
+**IVTDMetrics** This package addresses several calculation errors in the original ivtmetrics detection module, and provide more accurate evaluation metrics for surgical triplet detection.
 
 ## Features
 
