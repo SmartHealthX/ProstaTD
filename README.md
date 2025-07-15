@@ -53,7 +53,7 @@ To request access to the ProstaTD Dataset, please fill out our [request form](ht
 
 ## To-Do List
 - ✅ Release classification labels
-- ✅ Release ivtdmetrics metric tool  
+- ✅ Release new ivtdmetrics metric tool  
   *([ivtmetrics](https://github.com/CAMMA-public/ivtmetrics) not compatible with Triplet Detection)*
 - ⭕️ Provide RDV training examples on ProstaTD
 - ⭕️ Release bounding box annotations
