@@ -53,12 +53,14 @@ To request access to the ProstaTD Dataset, please fill out our [request form](ht
 
 ## To-Do List
 - ✅ Release classification labels
-- ⭕️ Adapt [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics)  
-  *(original version not compatible with ProstaTD; the paper uses [ultralytics](https://github.com/ultralytics/ultralytics) calculation method)*
+- ✅ Release ivtdmetrics metric tool  
+  *([ivtmetrics](https://github.com/CAMMA-public/ivtmetrics) not compatible with Triplet Detection)*
 - ⭕️ Provide RDV training examples on ProstaTD
 - ⭕️ Release bounding box annotations
 - ⭕️ Release track ID annotations
 - ⭕️ Release raw LabelMe JSON files and annotation tool for visualization
+- ⭕️ Release raw 30fps frames for tracking
+- ⭕️ Release raw video
 
 ## Examples
 
