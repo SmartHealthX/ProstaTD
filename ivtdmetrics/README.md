@@ -13,12 +13,6 @@ An extended metrics package for surgical triplet detection, based on [ivtmetrics
 
 ## Installation
 
-### Using pip (recommended)
-
-```bash
-pip install ivtdmetrics
-```
-
 ### From source
 
 ```bash
