@@ -8,7 +8,7 @@ An extended metrics package for surgical triplet detection, based on [ivtmetrics
 
 ## Features
 
-- **Recognition Metrics**: Same as ivtmetrics - compute Average Precision (AP) for multi-label classification tasks
+- **Recognition Metrics**: Same as ivtmetrics, compute Average Precision (AP) for multi-label classification tasks
 - **Detection Metrics**: Evaluate object detection performance with IoU-based matching
 
 ## Installation
