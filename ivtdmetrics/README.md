@@ -100,12 +100,12 @@ global_results = detector.compute_global_AP()
 print(f"Global mAP: {global_results['mAP']:.4f}")
 ```
 
-### Custom IoU Threshold
+### 101 point inerp (Ultralytcis ver) ###
 
 ```python
 from ivtdmetrics import Detection
 
-# Use COCO-style AP calculation
+# Use Ultralytcis AP calculation
 results = detector.compute_video_AP(style="coco")
 ```
 
