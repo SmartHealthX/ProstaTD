@@ -22,7 +22,6 @@ pip install ivtdmetrics
 ### From source
 
 ```bash
-git clone https://github.com/your-username/ivtdmetrics.git
 cd ivtdmetrics
 pip install -e ./
 ```
