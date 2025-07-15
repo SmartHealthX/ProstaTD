@@ -4,7 +4,7 @@ An extended metrics package for surgical triplet detection, based on [ivtmetrics
 
 ## Overview
 
-IVTDMetrics provides comprehensive evaluation metrics for surgical scene understanding tasks, specifically designed for Instrument-Verb-Target (IVT) triplet detection and recognition. This package extends the original ivtmetrics with enhanced functionality and improved performance evaluation capabilities.
+**IVTDMetrics** This package addresses and fixes several calculation errors in the original ivtmetrics detection module, and provide more accurate evaluation metrics for surgical triplet detection.
 
 ## Features
 
@@ -112,9 +112,6 @@ print(f"Global mAP: {global_results['mAP']:.4f}")
 ```python
 from ivtdmetrics import Detection
 
-# Use custom IoU threshold for detection matching
-detector = Detection(threshold=0.5)  # Default is 0.45
-
 # Use COCO-style AP calculation
 results = detector.compute_video_AP(style="coco")
 ```
@@ -123,14 +120,6 @@ results = detector.compute_video_AP(style="coco")
 - ✅ Release package
 - ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
 - ⭕️ **Triplet Tracking Metric** 
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Citation
 
@@ -148,8 +137,6 @@ If you use this package in your research, please cite:
 ## Acknowledgments
 
 This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics).
-
-**IVTDMetrics** This package addresses and fixes several calculation errors in the original ivtmetrics detection module, and provide more accurate evaluation metrics for surgical triplet detection.
 
 ## Contact
 
