@@ -100,12 +100,12 @@ global_results = detector.compute_global_AP()
 print(f"Global mAP: {global_results['mAP']:.4f}")
 ```
 
-### 101 point inerp (Ultralytcis ver) ###
+### 101 point inerp (ultralytics ver) ###
 
 ```python
 from ivtdmetrics import Detection
 
-# Use Ultralytcis AP calculation
+# Use ultralytics AP calculation
 results = detector.compute_video_AP(style="coco")
 ```
 
