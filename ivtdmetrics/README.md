@@ -1,6 +1,6 @@
 # IVTDMetrics
 
-An extended metrics package for surgical triplet detection, based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics).
+An extended metrics package for surgical triplet detection.
 
 ## Overview
 
