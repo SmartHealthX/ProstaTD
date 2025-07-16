@@ -23,46 +23,9 @@ pip install -e ./
 ### Requirements
 
 - Python >= 3.6
-- scikit-learn >= 1.0.2
 - numpy >= 1.21
 
 ## Quick Start
-
-### Detection Evaluation
-
-```python
-from ivtdmetrics import Detection
-
-# Initialize detection evaluator
-detector = Detection(
-    num_class=89,
-    num_tool=7,
-    threshold=0.5
-)
-
-# Prepare detection data
-# Format: [class_id, confidence, x, y, width, height]
-targets = [
-    [[1, 1.0, 0.1, 0.1, 0.2, 0.3], [3, 1.0, 0.5, 0.5, 0.2, 0.2]],  # Frame 1
-    [[2, 1.0, 0.2, 0.3, 0.3, 0.4]]                                   # Frame 2
-]
-
-predictions = [
-    [[1, 0.9, 0.12, 0.11, 0.18, 0.28], [3, 0.8, 0.52, 0.51, 0.19, 0.21]],  # Frame 1
-    [[2, 0.7, 0.22, 0.32, 0.28, 0.38]] # Frame 2
-]
-
-# Update with detection data
-detector.update(targets, predictions, format="list")
-
-# Signal end of video
-detector.video_end()
-
-# Compute detection metrics
-results = detector.compute_video_AP(component="ivt")
-print(f"Detection mAP: {results['mAP']:.4f}")
-print(f"Association metrics - LM: {results['lm']:.4f}, IDS: {results['ids']:.4f}")
-```
 
 #### Input Format
 
@@ -76,37 +39,72 @@ Detection data should be provided as lists of detections per frame:
 - `"ivt"`: Instrument-Verb-Target (full triplet)
 - `"i"`: Instrument only
 
-## Advanced Usage
-
-### Multi-Video Detection Evaluation
+#### Multi-Video Detection Evaluation
 
 ```python
-from ivtdmetrics import Detection
+from ivtdmetrics.detection import Detection
+import numpy as np
+
+# Test data
+video1_targets = [
+    [[0, 1, 1.0, 0.1, 0.1, 0.2, 0.2], [1, 2, 1.0, 0.5, 0.5, 0.2, 0.2]],
+    [[2, 3, 1.0, 0.3, 0.3, 0.2, 0.2]]
+]
+
+video1_predictions = [
+    [[0, 1, 0.9, 0.1, 0.1, 0.2, 0.2], [1, 2, 0.8, 0.7, 0.7, 0.1, 0.1], [3, 4, 0.7, 0.8, 0.8, 0.1, 0.1]],
+    []
+]
+
+video2_targets = [
+    [[2, 5, 1.0, 0.1, 0.1, 0.3, 0.3]],
+    [[4, 5, 1.0, 0.2, 0.2, 0.3, 0.3]]
+]
+
+video2_predictions = [
+    [[2, 5, 0.9, 0.1, 0.1, 0.3, 0.3], [6, 2, 0.5, 0.8, 0.8, 0.1, 0.1]],
+    [[4, 5, 0.95, 0.2, 0.2, 0.3, 0.3], [7, 1, 0.4, 0.6, 0.6, 0.1, 0.1]]
+]
+
+video3_targets = [
+    [[8, 0, 1.0, 0.0, 0.0, 0.3, 0.3], [9, 1, 1.0, 0.4, 0.4, 0.2, 0.2], [10, 2, 1.0, 0.7, 0.7, 0.2, 0.2]],
+    [[11, 3, 1.0, 0.1, 0.1, 0.4, 0.4]]
+]
+
+video3_predictions = [
+    [[8, 0, 0.9, 0.0, 0.0, 0.3, 0.3], [9, 1, 0.8, 0.45, 0.45, 0.15, 0.15], [12, 4, 0.6, 0.8, 0.8, 0.1, 0.1]],
+    [[11, 3, 0.85, 0.15, 0.15, 0.35, 0.35], [11, 3, 0.7, 0.2, 0.2, 0.3, 0.3]]
+]
+
+all_targets = [video1_targets, video2_targets, video3_targets]
+all_predictions = [video1_predictions, video2_predictions, video3_predictions]
 
 detector = Detection(num_class=89, num_tool=7, threshold=0.5)
 
-# Process multiple videos
-for video_data in video_dataset:
-    for targets, predictions in video_data:
-        detector.update(targets, predictions, format="list")
-    detector.video_end()  # Signal end of current video
+for video_idx, (targets, predictions) in enumerate(zip(all_targets, all_predictions)):
+    detector.update(targets, predictions, format="list")
+    detector.video_end()
 
-# Get video-wise performance
-video_results = detector.compute_video_AP()
-print(f"Video-wise mAP: {video_results['mAP']:.4f}")
+# style = "coco" is default setting
+video_ap_ivt = detector.compute_video_AP(component="ivt", style="coco")
+global_ap_ivt = detector.compute_global_AP(component="ivt", style="coco")
+video_ap_i = detector.compute_video_AP(component="i", style="coco")
+global_ap_i = detector.compute_global_AP(component="i", style="coco")
 
-# Get global performance across all videos
-global_results = detector.compute_global_AP()
-print(f"Global mAP: {global_results['mAP']:.4f}")
+print(f"IVT Video-wise mAP:  {video_ap_ivt['mAP']:.4f}")
+print(f"IVT Global mAP:      {global_ap_ivt['mAP']:.4f}")
+print(f"I Video-wise mAP:    {video_ap_i['mAP']:.4f}")
+print(f"I Global mAP:        {global_ap_i['mAP']:.4f}") 
 ```
 
-### 101 point inerp (ultralytics ver) ###
+### inerp ###
 
 ```python
-from ivtdmetrics import Detection
-
 # Use ultralytics AP calculation
-results = detector.compute_video_AP(style="coco")
+results = detector.compute_video_AP(style="coco") # default
+
+# Use orginal AP calculation
+results = detector.compute_video_AP(style="11point")
 ```
 
 ## To-Do List
@@ -119,17 +117,18 @@ results = detector.compute_video_AP(style="coco")
 If you use this package in your research, please cite:
 
 ```bibtex
-@article{chen2025prostatd,
-  title     = {ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection},
-  author    = {Chen, Yiliang and Li, Zhixi and Xu, Cheng and Liu, Alex Qinyang and Xu, Xuemiao and Teoh, Jeremy Yuen-Chun and He, Shengfeng and Qin, Jing},
-  journal   = {arXiv preprint arXiv:2506.01130},
-  year      = {2025}
+@misc{chen2025prostatd,
+      title={ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection}, 
+      author={Yiliang Chen and Zhixi Li and Cheng Xu and Alex Qinyang Liu and Xuemiao Xu and Jeremy Yuen-Chun Teoh and Shengfeng He and Jing Qin},
+      year={2025},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2506.01130}, 
 }
 ```
 
 ## Acknowledgments
 
-This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics).
+This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics). The enhancements include global confidence ranking, handling of pseudo-detections when test set ground truth doesn't contain specific classes, 101-point interpolation, and various other corrections.
 
 ## Contact
 
