@@ -128,7 +128,7 @@ If you use this package in your research, please cite:
 
 ## Acknowledgments
 
-This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics). The enhancements include global confidence ranking, handling of pseudo-detections when test set ground truth doesn't contain specific classes, 101-point interpolation, and various other corrections.
+This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics). The enhancements include global confidence ranking (video-level), handling of pseudo-detections when test set ground truth doesn't contain specific classes, 101-point interpolation, and various other corrections.
 
 ## Contact
 
