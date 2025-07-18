@@ -30,8 +30,8 @@ pip install -e ./
 #### Input Format
 
 Detection data should be provided as lists of detections per frame:
-- **List format**: `[[class_id, confidence, x, y, width, height], ...]`
-- **Dict format**: `[{"triplet": id, "instrument": [id, conf, x, y, w, h]}, ...]`
+- **List format**: ` [[tripletID, toolID, Confidences, x, y, w, h], [tripletID, toolID, Confidences, x, y, w, h], ...]`
+- **Dict format**: `[{"triplet":tripletID, "instrument":[toolID, Confidences, x, y, w, h]}, {"triplet":tripletID, "instrument":[toolID, Confidences, x, y, w, h]}, ...]`
 
 
 #### Supported Components
@@ -39,7 +39,7 @@ Detection data should be provided as lists of detections per frame:
 - `"ivt"`: Instrument-Verb-Target (full triplet)
 - `"i"`: Instrument only
 
-#### Multi-Video Detection Evaluation
+#### Multi-Video Detection Evaluation Example
 
 ```python
 from ivtdmetrics.detection import Detection
@@ -128,7 +128,7 @@ If you use this package in your research, please cite:
 
 ## Acknowledgments
 
-This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics). The enhancements include global confidence ranking (video-level), handling of pseudo-detections when test set ground truth doesn't contain specific classes, 101-point interpolation, and various other corrections.
+This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics). The enhancements include global confidence ranking (video/global-level), handling of pseudo-detections when test set ground truth doesn't contain specific classes, 101-point interpolation, and various other corrections.
 
 ## Contact
 
