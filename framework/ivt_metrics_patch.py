@@ -5,7 +5,7 @@
 IVT Metrics Patching Module
 ==========================
 
-This pathc adds ivtdmetrics module to calculate IVT triplet mAP metrics.
+This patch adds ivtdmetrics module to calculate IVT triplet mAP metrics.
 
 """
 

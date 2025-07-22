@@ -97,7 +97,7 @@ print(f"I Video-wise mAP:    {video_ap_i['mAP']:.4f}")
 print(f"I Global mAP:        {global_ap_i['mAP']:.4f}") 
 ```
 
-### inerp ###
+### Calculation ###
 
 ```python
 # Use ultralytics AP calculation
@@ -105,11 +105,20 @@ results = detector.compute_video_AP(style="coco") # default
 
 # Use orginal AP calculation
 results = detector.compute_video_AP(style="11point")
+
+....
+....
+
+# Other metrics (based on optimal global F1 threshold)
+print(f"IVT Video-wise mRec: {video_ap_ivt['mRec']:.4f}") 
+print(f"IVT Video-wise mPre: {video_ap_ivt['mPre']:.4f}")
+print(f"IVT Video-wise mF1:  {video_ap_ivt['mF1']:.4f}") 
 ```
 
 ## To-Do List
 - ✅ Release package
 - ⭕️ **MAP50_95 Support** 
+- ⭕️ **AR metric for DETR-based models** 
 - ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
 - ⭕️ **Triplet Tracking Metric** 
 
