@@ -459,6 +459,12 @@ class Detection(Recognition):
         classwise_ap = [np.nan] * num_class
         classwise_rec = [np.nan] * num_class  
         classwise_prec = [np.nan] * num_class
+        classwise_f1 = [np.nan] * num_class  # Add F1 array
+        
+        # Store precision and recall curves for F1 calculation (like ultralytics)
+        p_curves = []
+        r_curves = []
+        f1_curves = []
         
         # computation
         # npos: TP + FN = all GT (except bg); ndet: TP + FP = all preds (except bg); hits: TP
@@ -473,10 +479,16 @@ class Detection(Recognition):
                 classwise_ap[class_id] = np.nan
                 classwise_rec[class_id] = np.nan
                 classwise_prec[class_id] = np.nan
+                p_curves.append(np.zeros(1000))
+                r_curves.append(np.zeros(1000))
+                f1_curves.append(np.zeros(1000))
             elif npos>0 and len(hits)==0: # no detections but there are gt instances for the class
                 classwise_ap[class_id] = 0.0
                 classwise_rec[class_id] = 0.0
                 classwise_prec[class_id] = 0.0
+                p_curves.append(np.zeros(1000))
+                r_curves.append(np.zeros(1000))
+                f1_curves.append(np.zeros(1000))
             else:
                 # [Flag] Global sorting: sort hits by confidence in descending order
                 if len(conf) > 0 and len(conf) == len(hits):
@@ -509,8 +521,49 @@ class Detection(Recognition):
                             ap += np.max(prec[mask]) / 11.0
                 
                 classwise_ap[class_id] = ap
-                classwise_rec[class_id] = np.max(rec)
-                classwise_prec[class_id] = np.max(prec)
+                
+                
+                # Create precision and recall curves for 1000 confidence thresholds
+                x = np.linspace(0, 1, 1000)
+                if len(conf) > 0:
+                    p_curve = np.interp(-x, -np.array(conf), prec, left=1)
+                    r_curve = np.interp(-x, -np.array(conf), rec, left=0)
+                else:
+                    p_curve = np.zeros(1000)
+                    r_curve = np.zeros(1000)
+                
+                p_curves.append(p_curve)
+                r_curves.append(r_curve)
+                f1_curves.append(2 * p_curve * r_curve / (p_curve + r_curve + 1e-16))
+        
+        # Find optimal F1 threshold globally (like ultralytics)
+        if len(f1_curves) > 0:
+            f1_curves = np.array(f1_curves)
+            p_curves = np.array(p_curves)  
+            r_curves = np.array(r_curves)
+            
+            # Smooth the mean F1 curve and find max (like ultralytics)
+            mean_f1 = np.nanmean(f1_curves, axis=0)
+            # Simple smoothing (moving average)
+            kernel_size = int(len(mean_f1) * 0.1)  # 10% smoothing
+            if kernel_size > 1:
+                kernel = np.ones(kernel_size) / kernel_size
+                mean_f1_smooth = np.convolve(mean_f1, kernel, mode='same')
+            else:
+                mean_f1_smooth = mean_f1
+                
+            best_f1_idx = np.argmax(mean_f1_smooth)
+            
+            # Set precision and recall at optimal F1 threshold for all classes
+            for i, class_id in enumerate(classes_with_gt):
+                if i < len(p_curves) and i < len(r_curves):
+                    classwise_prec[class_id] = p_curves[i, best_f1_idx]
+                    classwise_rec[class_id] = r_curves[i, best_f1_idx]
+                    classwise_f1[class_id] = f1_curves[i, best_f1_idx] 
+                else:
+                    classwise_prec[class_id] = 0.0
+                    classwise_rec[class_id] = 0.0
+                    classwise_f1[class_id] = 0.0
         
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -523,19 +576,22 @@ class Detection(Recognition):
             return (classwise_ap, mAP), \
                     (classwise_rec, mRec), \
                     (classwise_prec, mPrec), \
+                    (classwise_f1, np.nanmean(classwise_f1)), \
                     assoc_results
     
     def compute_video_AP(self, component="ivt", style="coco"):
         classwise_ap    = []
         classwise_rec   = []
         classwise_prec  = []
+        classwise_f1    = []  
         video_lm, video_plm, video_ids, video_idm, video_mil, video_fp, video_fn = [],[],[],[],[],[],[]
         for j in range(self.video_count):
             video_id = j+1
-            (ap, _), (rec, _), (prec, _), asc = self.compute(component=component, video_id=video_id, style=style)            
+            (ap, _), (rec, _), (prec, _), (f1, _), asc = self.compute(component=component, video_id=video_id, style=style)            
             classwise_ap.append(ap)
             classwise_rec.append(rec)
             classwise_prec.append(prec)
+            classwise_f1.append(f1)  
             video_lm.append(asc[0])  # association metrics starts
             video_plm.append(asc[1])
             video_ids.append(asc[2])
@@ -548,9 +604,11 @@ class Detection(Recognition):
             classwise_ap    = np.nanmean(np.stack(classwise_ap, axis=0), axis=0)
             classwise_rec   = np.nanmean(np.stack(classwise_rec, axis=0), axis=0)
             classwise_prec  = np.nanmean(np.stack(classwise_prec, axis=0), axis=0)        
+            classwise_f1    = np.nanmean(np.stack(classwise_f1, axis=0), axis=0)  
             mAP             = np.nanmean(classwise_ap)
             mRec            = np.nanmean(classwise_rec)
             mPrec           = np.nanmean(classwise_prec) 
+            mF1             = np.nanmean(classwise_f1)  
             lm              = np.nanmean(video_lm)  # association metrics starts
             plm             = np.nanmean(video_plm)
             ids             = np.nanmean(video_ids)
@@ -559,19 +617,19 @@ class Detection(Recognition):
             fp              = np.nanmean(video_fp)
             fn              = np.nanmean(video_fn)            
         return {
-                "AP":classwise_ap, "mAP":mAP, "Rec":classwise_rec, "mRec":mRec, "Pre":classwise_prec, "mPre":mPrec,
+                "AP":classwise_ap, "mAP":mAP, "Rec":classwise_rec, "mRec":mRec, "Pre":classwise_prec, "mPre":mPrec, "F1":classwise_f1, "mF1":mF1,
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,
                }
     
     def compute_AP(self, component="ivt", style="coco"):
-        a,r,p, asc = self.compute(component=component, video_id=None, style=style)
+        a,r,p,f1, asc = self.compute(component=component, video_id=None, style=style)
         (lm, plm, ids, idm, mil, fp, fn) = asc
-        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1],
+        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,}
         
     def compute_global_AP(self, component="ivt", style="coco"):
-        a,r,p, asc =  self.compute(component=component, video_id=-1, style=style)
+        a,r,p,f1, asc =  self.compute(component=component, video_id=-1, style=style)
         (lm, plm, ids, idm, mil, fp, fn) = asc
-        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1],
+        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,}
 # %%

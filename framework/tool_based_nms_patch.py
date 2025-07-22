@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
+Tool-based NMS Patching Module
+==============================
+
 This module provides a non_max_suppression function
 to perform NMS based on tool categories instead of triplet categories.
 (Tool-based NMS: Groups detections by tool class ID (mapped from triplet ID))
+
 """
 
 import torch
@@ -46,6 +50,15 @@ class TripletToToolMapper:
     def load_mapping(self, mapping_file):
         """
         Load triplet to tool mapping from file.
+        
+        Expected file format (CSV):
+        # IVT ID, I ID, V ID, T ID, IVT Name, I Name, V Name, T Name
+        0,0,0,0,grasper_grasp_gallbladder,grasper,grasp,gallbladder
+        1,0,1,1,grasper_retract_gallbladder,grasper,retract,gallbladder
+        ...
+        
+        Args:
+            mapping_file (str): Path to the mapping file
         """
         try:
             mapping_path = Path(mapping_file)
@@ -73,12 +86,24 @@ class TripletToToolMapper:
     def get_tool_id(self, triplet_id):
         """
         Get tool ID for a given triplet ID.
+        
+        Args:
+            triplet_id (int): The triplet class ID
+            
+        Returns:
+            int: Corresponding tool ID, or original triplet_id if mapping not found
         """
         return self.triplet_to_tool.get(int(triplet_id), int(triplet_id))
     
     def convert_classes_to_tools(self, classes_tensor):
         """
         Convert a tensor of triplet class IDs to tool IDs.
+        
+        Args:
+            classes_tensor (torch.Tensor): Tensor of triplet class IDs
+            
+        Returns:
+            torch.Tensor: Tensor of tool class IDs
         """
         if len(classes_tensor) == 0:
             return classes_tensor
@@ -96,6 +121,15 @@ _mapper = None
 def get_mapper(mapping_file=None):
     """
     Get or create the global triplet-to-tool mapper.
+    
+    Args:
+        mapping_file (str, optional): Path to mapping file. Required on first call.
+        
+    Returns:
+        TripletToToolMapper: The mapper instance
+        
+    Raises:
+        ValueError: If mapping_file is not provided and mapper is not initialized
     """
     global _mapper
     if _mapper is None:
@@ -107,6 +141,9 @@ def get_mapper(mapping_file=None):
 def set_mapping_file(mapping_file):
     """
     Set the mapping file and reinitialize the mapper.
+    
+    Args:
+        mapping_file (str): Path to the triplet mapping file
     """
     global _mapper
     _mapper = TripletToToolMapper(mapping_file)

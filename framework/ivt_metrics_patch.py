@@ -250,8 +250,8 @@ class IVTMetricsValidator(DetectionValidator):
                 ('i', 'I (Instrument)', 'Instrument only')
             ]
             
-            LOGGER.info(f"{'Component':<15} {'mAP':<8} {'mRec':<8} {'mPre':<8}")
-            LOGGER.info("-" * 40)
+            LOGGER.info(f"{'Component':<15} {'mAP':<8} {'mRec':<8} {'mPre':<8} {'mF1':<8}")
+            LOGGER.info("-" * 50)
             
             for comp_code, comp_name, description in components:
                 results = self.ivt_detector.compute_video_AP(comp_code, style="coco")
@@ -259,7 +259,10 @@ class IVTMetricsValidator(DetectionValidator):
                 mRec = results.get('mRec', 0.0)
                 mPre = results.get('mPre', 0.0)
                 
-                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f}")
+                # Use F1 from ivtdmetrics results (like ultralytics)
+                mF1 = results.get('mF1', 0.0)
+                
+                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f} {mF1:<8.4f}")
             
             LOGGER.info("="*50)
 

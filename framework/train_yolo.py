@@ -44,8 +44,9 @@ def parse_args():
     parser.add_argument('--warmup-momentum', type=float, default=0.8, help='warmup momentum')
     parser.add_argument('--dropout', type=float, default=0.0)
     parser.add_argument('--agnostic-nms', type=bool, default=False, help='use class-agnostic NMS (default False)')
-    parser.add_argument('--tool-nms', action='store_true', help='use tool-based NMS instead of triplet-based NMS')
-    parser.add_argument('--mapping-file', type=str, default="/ssd/prostate/prostate_track_v2/triplet_maps_v2.txt", help='Path to triplet-to-tool mapping file (for tool-nms and ivt-metrics)')
+    parser.add_argument('--tool-nms', action='store_true', help='Apply tool-based NMS patch')
+    parser.add_argument('--mapping-file', type=str, default='/ssd/prostate/prostate_track_v2/triplet_maps_v2.txt', help='Path to triplet to tool mapping file')
+    parser.add_argument('--apply-ivt-metrics', type=bool, default=True, help='Apply IVT metrics patch for AP50-95 calculation (default True)')
     return parser.parse_args()
 
 
@@ -58,17 +59,11 @@ def apply_ivt_metrics_patch(mapping_file):
     return success
 
 
-def apply_tool_nms_if_requested(use_tool_nms, mapping_file):
+def apply_tool_nms_if_requested(mapping_file):
     """Apply tool-based NMS patch if requested"""
-    if use_tool_nms:
-        import tool_based_nms_patch
-        success = tool_based_nms_patch.apply_patch(mapping_file)
-        if success:
-            print("Tool-based NMS patch applied")
-        return success
-    else:
-        print("Using standard NMS")
-        return False
+    import tool_based_nms_patch
+    success = tool_based_nms_patch.apply_patch(mapping_file)
+    return
 
 def print_metrics(metrics, class_names=None):
     """Print evaluation metrics"""
@@ -150,11 +145,13 @@ def main():
     """Main function"""
     args = parse_args()
     
-    # Apply IVT metrics patch (always apply if mapping file exists)
-    ivt_metrics_applied = apply_ivt_metrics_patch(args.mapping_file)
+    # Apply tool-based NMS patch if requested
+    if args.tool_nms:
+        tool_nms_applied = apply_tool_nms_if_requested(args.mapping_file)
     
-    # Apply Tool-based NMS patch (if requested)
-    tool_nms_applied = apply_tool_nms_if_requested(args.tool_nms, args.mapping_file)
+    # Apply IVT metrics patch if requested
+    if args.apply_ivt_metrics:
+        ivt_metrics_applied = apply_ivt_metrics_patch(args.mapping_file)
     
     # Test-only mode
     if args.test_only:
