@@ -109,6 +109,7 @@ results = detector.compute_video_AP(style="11point")
 
 ## To-Do List
 - ✅ Release package
+- ⭕️ **MAP50_95 Support** 
 - ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
 - ⭕️ **Triplet Tracking Metric** 
 

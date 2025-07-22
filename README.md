@@ -55,11 +55,10 @@ To request access to the ProstaTD Dataset, please fill out our [request form](ht
 - ✅ Release classification labels
 - ✅ Release new [ivtdmetrics](https://github.com/SmartHealthX/ProstaTD/blob/main/ivtdmetrics) metric tool  
   *([ivtmetrics](https://github.com/CAMMA-public/ivtmetrics) not compatible with Triplet Detection)*
-- ⭕️ Provide training examples on ProstaTD
-- ⭕️ Release bounding box annotations
-- ⭕️ Release track ID annotations
+- ✅ Provide [training examples](https://github.com/SmartHealthX/ProstaTD/blob/main/framework) on ProstaTD 
+- ⭕️ Release bounding box annotations and preprocessing scripts
 - ⭕️ Release raw LabelMe JSON files and annotation tool for visualization
-- ⭕️ Release raw 30fps frames for tracking
+- ⭕️ Release raw 30fps frames and track ID annotations for tracking
 - ⭕️ Release raw video
 
 ## Examples
