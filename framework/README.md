@@ -83,7 +83,7 @@ python train_yolo.py \
 - **`--agnostic-nms`**: Use class-agnostic NMS (default: False)
 - **`--tool-nms`**: Apply tool-based NMS patch
 - **`--mapping-file`**: Path to triplet to tool mapping file
-- **`--apply-ivt-metrics`**: Apply IVT Detection metrics patch for AP50-95 calculation (default: True)
+- **`--apply-ivt-metrics`**: Apply IVT Detection metrics patch for mAP calculation (default: True)
 
 ## Acknowledgments
 
