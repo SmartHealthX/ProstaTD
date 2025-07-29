@@ -65,7 +65,7 @@ class Detection(Recognition):
     @format
         box format: [{"triplet":tid, "instrument":[tool, 1.0, x,y,w,h], "target":[]}]
     """
-    def __init__(self, num_class=100, num_tool=6, num_target=15, threshold=0.5):
+    def __init__(self, num_class=100, num_tool=6, num_target=15, threshold=0.5, enable_map5095=True):
         super(Recognition, self).__init__()
         self.num_class      = num_class  
         self.num_tool       = num_tool                
@@ -76,6 +76,9 @@ class Detection(Recognition):
         self.video_count    = 0
         self.end_call       = False
         self.threshold      = threshold
+        self.enable_map5095 = enable_map5095  # Renamed parameter to control mAP50-95 computation
+        # IoU thresholds for mAP50-95 (0.5 to 0.95 in steps of 0.05)
+        self.iou_thresholds = np.arange(0.5, 1.0, 0.05) if enable_map5095 else [threshold]
         self.reset()        
                 
     def reset(self):
@@ -89,13 +92,18 @@ class Detection(Recognition):
     def video_end(self):
         self.video_count += 1
         self.end_call = True
+        # Initialize storage for different IoU thresholds
+        num_thresholds = len(self.iou_thresholds)
         self.accumulator[self.video_count] = {
             "hits":  [[] for _ in range(self.num_class)],
             "ndet":  [0  for _ in range(self.num_class)],
             "npos":  [0  for _ in range(self.num_class)],                             
             "hits_i":[[] for _ in range(self.num_tool)],
             "ndet_i":[0  for _ in range(self.num_tool)] ,
-            "npos_i":[0  for _ in range(self.num_tool)] ,                    
+            "npos_i":[0  for _ in range(self.num_tool)] ,
+            # Add hits for multiple IoU thresholds (for mAP50-95)
+            "hits_5095": [[[] for _ in range(self.num_class)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
+            "hits_i_5095": [[[] for _ in range(self.num_tool)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
             "fp": 0,
             "fn": 0,
             "lm": 0,
@@ -139,6 +147,13 @@ class Detection(Recognition):
             if self.iou(det_gt[-4:], det_pd[-4:]) >= threshold: # cond 2: sufficient iou
                 return True
         return False 
+    
+    def is_match_multi_iou(self, det_gt, det_pd, iou_thresholds):  
+        """Check if detection matches ground truth for multiple IoU thresholds"""
+        if det_gt[0] == det_pd[0]: # cond 1: correct identity        
+            iou_value = self.iou(det_gt[-4:], det_pd[-4:])
+            return [iou_value >= threshold for threshold in iou_thresholds]
+        return [False] * len(iou_thresholds)
     
     def is_partial_match(self, det_gt, det_pd):  
         if det_gt[0] == det_pd[0]: # cond 1: correct identity        
@@ -249,9 +264,24 @@ class Detection(Recognition):
                 if matched:
                     self.accumulator[self.video_count]["hits"][int(det_pd[0])].append(1.0)
                     self.accumulator[self.video_count]["conf"][int(det_pd[0])].append(pred_conf[i])  # Collect confidence
+                    
+                    # Add hits for multiple IoU thresholds (mAP50-95)
+                    if self.enable_map5095:
+                        # Use the same matched GT (y) and detection (f) for multi-IoU check
+                        matches = self.is_match_multi_iou(y, f, self.iou_thresholds)
+                        for thresh_idx, match in enumerate(matches):
+                            if match:
+                                self.accumulator[self.video_count]["hits_5095"][thresh_idx][int(det_pd[0])].append(1.0)
+                            else:
+                                self.accumulator[self.video_count]["hits_5095"][thresh_idx][int(det_pd[0])].append(0.0)
                 else:
                     self.accumulator[self.video_count]["hits"][int(det_pd[0])].append(0.0)
                     self.accumulator[self.video_count]["conf"][int(det_pd[0])].append(pred_conf[i])  # Collect confidence
+                    
+                    # Add hits for multiple IoU thresholds (mAP50-95)
+                    if self.enable_map5095:
+                        for thresh_idx in range(len(self.iou_thresholds)):
+                            self.accumulator[self.video_count]["hits_5095"][thresh_idx][int(det_pd[0])].append(0.0)
         # for instrument       
         detection_gt_i = detection_gt.copy()
         detection_pd_i = detection_pd.copy() 
@@ -272,9 +302,24 @@ class Detection(Recognition):
                 if matched:
                     self.accumulator[self.video_count]["hits_i"][int(det_pd[1])].append(1.0)
                     self.accumulator[self.video_count]["conf_i"][int(det_pd[1])].append(pred_conf[i])  # Collect confidence
+                    
+                    # Add hits for multiple IoU thresholds (mAP50-95)
+                    if self.enable_map5095:
+                        # Use the same matched GT (y) and detection (f) for multi-IoU check
+                        matches = self.is_match_multi_iou(y, f, self.iou_thresholds)
+                        for thresh_idx, match in enumerate(matches):
+                            if match:
+                                self.accumulator[self.video_count]["hits_i_5095"][thresh_idx][int(det_pd[1])].append(1.0)
+                            else:
+                                self.accumulator[self.video_count]["hits_i_5095"][thresh_idx][int(det_pd[1])].append(0.0)
                 else:
                     self.accumulator[self.video_count]["hits_i"][int(det_pd[1])].append(0.0)
                     self.accumulator[self.video_count]["conf_i"][int(det_pd[1])].append(pred_conf[i])  # Collect confidence
+                    
+                    # Add hits for multiple IoU thresholds (mAP50-95)
+                    if self.enable_map5095:
+                        for thresh_idx in range(len(self.iou_thresholds)):
+                            self.accumulator[self.video_count]["hits_i_5095"][thresh_idx][int(det_pd[1])].append(0.0)
         # process association
         self.association(targets=detection_gt.copy(), predictions=detection_pd.copy())
         
@@ -579,6 +624,98 @@ class Detection(Recognition):
                     (classwise_f1, np.nanmean(classwise_f1)), \
                     assoc_results
     
+    def compute_5095(self, component="ivt", video_id=None, style="coco"):
+        if not self.enable_map5095:
+            return None
+            
+        if video_id == None: 
+            video_id = self.video_count-1 if self.end_call else self.video_count
+        hit_str     = "hits_5095" if component=="ivt" else "hits_i_5095"
+        pos_str     = "npos" if component=="ivt" else "npos_i"
+        det_str     = "ndet" if component=="ivt" else "ndet_i"
+        num_class   = self.num_class if component=="ivt" else self.num_tool
+        
+        # decide on accumulator for framewise / video wise / current
+        if video_id == -1: # global AP
+            accumulator = {}
+            accumulator[hit_str] = [[sum([p[thresh_idx][k] for p in [self.accumulator[f][hit_str] for f in self.accumulator] ],[]) 
+                                   for k in range(num_class)] for thresh_idx in range(len(self.iou_thresholds))]
+            accumulator[pos_str] = list(np.sum(np.stack([self.accumulator[f][pos_str] for f in self.accumulator]), axis=0))       
+            accumulator[det_str] = list(np.sum(np.stack([self.accumulator[f][det_str] for f in self.accumulator]), axis=0))
+            # Merge confidence information for global AP calculation
+            conf_str = "conf" if component=="ivt" else "conf_i"
+            accumulator[conf_str] = [sum([p[k]for p in [self.accumulator[f][conf_str] for f in self.accumulator] ],[]) for k in range(num_class)]
+        else:
+             accumulator = self.accumulator[video_id]
+        
+        # COCO-style modification: Only consider classes with ground truth
+        if style == "coco":
+            classes_with_gt = [i for i in range(num_class) if accumulator[pos_str][i] > 0]
+        else:
+            classes_with_gt = list(range(num_class))
+        
+        # Initialize arrays for all IoU thresholds
+        classwise_ap_5095 = []
+        
+        for thresh_idx in range(len(self.iou_thresholds)):
+            classwise_ap = [np.nan] * num_class
+            
+            # computation for each IoU threshold
+            for class_id in classes_with_gt:
+                hits, npos, ndet = accumulator[hit_str][thresh_idx][class_id], accumulator[pos_str][class_id], accumulator[det_str][class_id]
+                
+                # Get corresponding confidence
+                conf_str = "conf" if component=="ivt" else "conf_i"
+                conf = accumulator[conf_str][class_id] if conf_str in accumulator else []
+                
+                if npos + ndet == 0: # no gt instance and no detection for the class
+                    classwise_ap[class_id] = np.nan
+                elif npos>0 and len(hits)==0: # no detections but there are gt instances for the class
+                    classwise_ap[class_id] = 0.0
+                else:
+                    # Global sorting: sort hits by confidence in descending order
+                    if len(conf) > 0 and len(conf) == len(hits):
+                        # Sort by confidence
+                        sorted_indices = np.argsort(-np.array(conf))
+                        hits = np.array(hits)[sorted_indices]
+                    
+                    hits = np.cumsum(hits) # TPs
+                    rec  = hits / npos if npos else 0.0
+                    prec = hits / (np.array(range(len(hits)), dtype=float) + 1.0)
+                    
+                    if style == "coco":
+                        # COCO-style 101-point interpolation AP calculation
+                        # Append sentinel values to beginning and end
+                        mrec = np.concatenate(([0.0], rec, [1.0]))
+                        mpre = np.concatenate(([1.0], prec, [0.0]))
+                        
+                        # Compute the precision envelope
+                        mpre = np.flip(np.maximum.accumulate(np.flip(mpre)))
+                        
+                        # Integrate area under curve using 101-point interpolation
+                        x = np.linspace(0, 1, 101)  # 101-point interp (COCO standard)
+                        ap = np.trapz(np.interp(x, mrec, mpre), x)  # integrate using trapezoidal rule
+                    else:
+                        # Original 11-point interpolation
+                        ap = 0.0
+                        for i in range(11):
+                            mask = rec >= (i / 10.0)
+                            if np.sum(mask) > 0:
+                                ap += np.max(prec[mask]) / 11.0
+                    
+                    classwise_ap[class_id] = ap
+            
+            classwise_ap_5095.append(classwise_ap)
+        
+        # Calculate mAP50-95 as average across all IoU thresholds
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            classwise_ap_5095 = np.array(classwise_ap_5095)  # Shape: (num_thresholds, num_classes)
+            classwise_map_5095 = np.nanmean(classwise_ap_5095, axis=0)  # Average across IoU thresholds
+            mAP_5095 = np.nanmean(classwise_map_5095)  # Average across classes
+            
+        return classwise_map_5095, mAP_5095
+    
     def compute_video_AP(self, component="ivt", style="coco"):
         classwise_ap    = []
         classwise_rec   = []
@@ -616,20 +753,69 @@ class Detection(Recognition):
             mil            = np.nanmean(video_mil)
             fp              = np.nanmean(video_fp)
             fn              = np.nanmean(video_fn)            
-        return {
+        result = {
                 "AP":classwise_ap, "mAP":mAP, "Rec":classwise_rec, "mRec":mRec, "Pre":classwise_prec, "mPre":mPrec, "F1":classwise_f1, "mF1":mF1,
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,
                }
+        
+        if self.enable_map5095:
+            ap_5095_result = self.compute_video_AP_5095(component=component, style=style)
+            if ap_5095_result is not None:
+                classwise_ap_5095, mAP_5095 = ap_5095_result
+                result["AP_5095"] = classwise_ap_5095
+                result["mAP_5095"] = mAP_5095
+        
+        return result
+    
+    def compute_video_AP_5095(self, component="ivt", style="coco"):
+        if not self.enable_map5095:
+            return None
+            
+        classwise_ap_5095 = []
+        for j in range(self.video_count):
+            video_id = j+1
+            ap_5095_result = self.compute_5095(component=component, video_id=video_id, style=style)
+            if ap_5095_result is not None:
+                classwise_map_5095, mAP_5095 = ap_5095_result
+                classwise_ap_5095.append(classwise_map_5095)
+        
+        if classwise_ap_5095:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                classwise_ap_5095 = np.nanmean(np.stack(classwise_ap_5095, axis=0), axis=0)
+                mAP_5095 = np.nanmean(classwise_ap_5095)
+            return classwise_ap_5095, mAP_5095
+        return None
     
     def compute_AP(self, component="ivt", style="coco"):
         a,r,p,f1, asc = self.compute(component=component, video_id=None, style=style)
         (lm, plm, ids, idm, mil, fp, fn) = asc
-        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
+        result = {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,}
+        
+        # Add mAP50-95 if enabled
+        if self.enable_map5095:
+            ap_5095_result = self.compute_5095(component=component, video_id=None, style=style)
+            if ap_5095_result is not None:
+                classwise_map_5095, mAP_5095 = ap_5095_result
+                result["AP_5095"] = classwise_map_5095
+                result["mAP_5095"] = mAP_5095
+        
+        return result
         
     def compute_global_AP(self, component="ivt", style="coco"):
         a,r,p,f1, asc =  self.compute(component=component, video_id=-1, style=style)
         (lm, plm, ids, idm, mil, fp, fn) = asc
-        return {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
+        result = {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,}
+        
+        # Add mAP50-95 if enabled
+        if self.enable_map5095:
+            ap_5095_result = self.compute_5095(component=component, video_id=-1, style=style)
+            if ap_5095_result is not None:
+                classwise_map_5095, mAP_5095 = ap_5095_result
+                result["AP_5095"] = classwise_map_5095
+                result["mAP_5095"] = mAP_5095
+        
+        return result
 # %%

@@ -37,6 +37,9 @@ Each instance within every frame of the dataset video is represented as a 10-val
 4. Bounding box coordinates (cx, cy, w, h) are normalized to [0,1] range relative to frame dimensions
 5. Some frames were removed due to non-surgical scenes or adverse environmental factors (e.g., extreme reflection); overall, the frames are visually continuous​
 
+### Usage
+If you want to try using this dataset on your model, please refer to the [training example](https://github.com/SmartHealthX/ProstaTD/tree/main/frameworkc) and [benchmarking package](https://github.com/SmartHealthX/ProstaTD/tree/main/ivtdmetrics)
+
 ### Contact: 
 To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
 

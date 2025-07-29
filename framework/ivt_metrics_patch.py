@@ -5,7 +5,7 @@
 IVT Metrics Patching Module
 ==========================
 
-This patch adds ivtdmetrics module to calculate IVT triplet mAP metrics.
+This pathc adds ivtdmetrics module to calculate IVT triplet mAP metrics.
 
 """
 
@@ -226,9 +226,11 @@ class IVTMetricsValidator(DetectionValidator):
                 'ivt/mAP': ivt_results.get('mAP', 0.0),
                 'ivt/mRecall': ivt_results.get('mRec', 0.0),
                 'ivt/mPrecision': ivt_results.get('mPre', 0.0),
+                'ivt/mAP_5095': ivt_results.get('mAP_5095', 0.0),
                 'i/mAP': i_results.get('mAP', 0.0),
                 'i/mRecall': i_results.get('mRec', 0.0),
                 'i/mPrecision': i_results.get('mPre', 0.0),
+                'i/mAP_5095': i_results.get('mAP_5095', 0.0),
             })
         
         return stats
@@ -250,8 +252,8 @@ class IVTMetricsValidator(DetectionValidator):
                 ('i', 'I (Instrument)', 'Instrument only')
             ]
             
-            LOGGER.info(f"{'Component':<15} {'mAP':<8} {'mRec':<8} {'mPre':<8} {'mF1':<8}")
-            LOGGER.info("-" * 50)
+            LOGGER.info(f"{'Component':<15} {'mAP':<8} {'mRec':<8} {'mPre':<8} {'mF1':<8} {'mAP95':<8}")
+            LOGGER.info("-" * 58)
             
             for comp_code, comp_name, description in components:
                 results = self.ivt_detector.compute_video_AP(comp_code, style="coco")
@@ -262,9 +264,12 @@ class IVTMetricsValidator(DetectionValidator):
                 # Use F1 from ivtdmetrics results (like ultralytics)
                 mF1 = results.get('mF1', 0.0)
                 
-                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f} {mF1:<8.4f}")
+                # Get mAP50-95 result
+                mAP_5095 = results.get('mAP_5095', 0.0)
+                
+                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f} {mF1:<8.4f} {mAP_5095:<8.4f}")
             
-            LOGGER.info("="*50)
+            LOGGER.info("="*58)
 
 
 def apply_patch(mapping_file=None):
