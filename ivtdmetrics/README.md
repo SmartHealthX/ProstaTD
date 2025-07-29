@@ -140,13 +140,13 @@ print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}")
 
 **Pseudo-Detection Handling**: Fixed calculation errors when handling pseudo-detections for scenarios where ground truth lacks certain classes but predictions include them.
 
-**Precision, Recall, and F1 Evaluation**: Added metrics based on IoU=0.5 using global optimal F1 threshold
+**Precision, Recall, and F1 Evaluation**: Added metrics based on a single optimal confidence threshold determined by maximizing F1 score. (this Recall differs from the AR calculation method)
 
-**mAP50-95 Evaluation**: Added mAP50-95 result calculation
+**mAP50-95 Evaluation**: Added mAP50-95 result calculation.
 
-**AR@max_det Evaluation**: Added AR@max_det calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet is supposed to be under 100, making AR@max_det equal to AR@100.
+**AR@max_det Evaluation**: Added Average Recall calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet is supposed to be under 100, making AR@max_det equal to AR@100.
 
-**Bug Fixes**: Fixed various bugs likse list2stack function
+**Bug Fixes**: Fixed various bugs likse list2stack function.
 
 ## Citation
 
