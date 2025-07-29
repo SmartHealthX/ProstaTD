@@ -77,7 +77,7 @@ video3_predictions = [
 all_targets = [video1_targets, video2_targets, video3_targets]
 all_predictions = [video1_predictions, video2_predictions, video3_predictions]
 
-detector = Detection(num_class=89, num_tool=7, threshold=0.5)
+detector = Detection(num_class=89, num_tool=7)
 
 for video_idx, (targets, predictions) in enumerate(zip(all_targets, all_predictions)):
     detector.update(targets, predictions, format="list")
@@ -98,10 +98,18 @@ print(f"IVT Global mAP@5095:      {global_ap_ivt['mAP_5095']:.4f}")
 print(f"I Video-wise mAP@5095:    {video_ap_i['mAP_5095']:.4f}")
 print(f"I Global mAP@5095:        {global_ap_i['mAP_5095']:.4f}") 
 ```
-
 ### Calculation ###
 
 ```python
+# Only calculate mAP@50
+detector = Detection(num_class=89, num_tool=7, enable_map5095=False)
+
+# Calculate both mAP@50 and mAP@50_95
+detector = Detection(num_class=89, num_tool=7)
+
+....
+....
+
 # Use ultralytics AP calculation
 results = detector.compute_video_AP(style="coco") # default
 
@@ -112,9 +120,10 @@ results = detector.compute_video_AP(style="11point")
 ....
 
 # Other metrics (based on optimal global F1 threshold)
-print(f"IVT Video-wise mRec: {video_ap_ivt['mRec']:.4f}") 
-print(f"IVT Video-wise mPre: {video_ap_ivt['mPre']:.4f}")
-print(f"IVT Video-wise mF1:  {video_ap_ivt['mF1']:.4f}") 
+print(f"IVT Video-wise Rec: {video_ap_ivt['mRec']:.4f}") 
+print(f"IVT Video-wise Pre: {video_ap_ivt['mPre']:.4f}")
+print(f"IVT Video-wise F1:  {video_ap_ivt['mF1']:.4f}") 
+print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}") 
 # LM, PLM.... are based on image-level conf ranking
 ```
 
@@ -129,11 +138,13 @@ print(f"IVT Video-wise mF1:  {video_ap_ivt['mF1']:.4f}")
 
 **101-Point Interpolation**: Adopted 101-point interpolation for mAP calculation
 
-**Pseudo-Detection Handling**: Fixed calculation errors when handling pseudo-detections for scenarios where test set ground truth doesn't contain specific classes
+**Pseudo-Detection Handling**: Fixed calculation errors when handling pseudo-detections for scenarios where ground truth lacks certain classes but predictions include them.
 
-**Enhanced Precision, Recall, and F1 Calculation**: Added metrics based on IoU=0.5 using global optimal F1 threshold
+**Precision, Recall, and F1 Evaluation**: Added metrics based on IoU=0.5 using global optimal F1 threshold
 
-**Comprehensive mAP50-95 Evaluation**: Added mAP50-95 result calculation
+**mAP50-95 Evaluation**: Added mAP50-95 result calculation
+
+**AR@max_det Evaluation**: Added AR@max_det calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet should be under 100, making AR@max_det == AR@100.
 
 **Bug Fixes**: Fixed various bugs likse list2stack function
 

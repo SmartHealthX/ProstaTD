@@ -484,10 +484,10 @@ class Detection(Recognition):
             accumulator[hit_str] = [sum([p[k]for p in [self.accumulator[f][hit_str] for f in self.accumulator] ],[]) for k in range(num_class)]            
             accumulator[pos_str] = list(np.sum(np.stack([self.accumulator[f][pos_str] for f in self.accumulator]), axis=0))       
             accumulator[det_str] = list(np.sum(np.stack([self.accumulator[f][det_str] for f in self.accumulator]), axis=0))
-            # [Flag] Merge confidence information for global AP calculation
+            # Merge confidence information for global AP calculation
             conf_str = "conf" if component=="ivt" else "conf_i"
             accumulator[conf_str] = [sum([p[k]for p in [self.accumulator[f][conf_str] for f in self.accumulator] ],[]) for k in range(num_class)]
-            # [Flag] Merge association metrics for global AP calculation
+            # Merge association metrics for global AP calculation
             for key in ["fp", "fn", "lm", "plm", "ids", "idm", "mil"]:
                 accumulator[key] = sum([self.accumulator[f][key] for f in self.accumulator])
         else:
@@ -500,7 +500,6 @@ class Detection(Recognition):
         else:
             classes_with_gt = list(range(num_class))
         
-        # Initialize arrays for all classes
         classwise_ap = [np.nan] * num_class
         classwise_rec = [np.nan] * num_class  
         classwise_prec = [np.nan] * num_class
@@ -516,7 +515,7 @@ class Detection(Recognition):
         for class_id in classes_with_gt:
             hits, npos, ndet = accumulator[hit_str][class_id], accumulator[pos_str][class_id], accumulator[det_str][class_id]
             
-            # [Flag] Get corresponding confidence
+            # Get corresponding confidence
             conf_str = "conf" if component=="ivt" else "conf_i"
             conf = accumulator[conf_str][class_id] if conf_str in accumulator else []
             
@@ -535,7 +534,7 @@ class Detection(Recognition):
                 r_curves.append(np.zeros(1000))
                 f1_curves.append(np.zeros(1000))
             else:
-                # [Flag] Global sorting: sort hits by confidence in descending order
+                # Global sorting: sort hits by confidence in descending order
                 if len(conf) > 0 and len(conf) == len(hits):
                     # Sort by confidence
                     sorted_indices = np.argsort(-np.array(conf))
@@ -581,13 +580,13 @@ class Detection(Recognition):
                 r_curves.append(r_curve)
                 f1_curves.append(2 * p_curve * r_curve / (p_curve + r_curve + 1e-16))
         
-        # Find optimal F1 threshold globally (like ultralytics)
+        # Find optimal F1 threshold globally 
         if len(f1_curves) > 0:
             f1_curves = np.array(f1_curves)
             p_curves = np.array(p_curves)  
             r_curves = np.array(r_curves)
             
-            # Smooth the mean F1 curve and find max (like ultralytics)
+            # Smooth the mean F1 curve and find max 
             mean_f1 = np.nanmean(f1_curves, axis=0)
             # Simple smoothing (moving average)
             kernel_size = int(len(mean_f1) * 0.1)  # 10% smoothing
@@ -654,11 +653,12 @@ class Detection(Recognition):
         else:
             classes_with_gt = list(range(num_class))
         
-        # Initialize arrays for all IoU thresholds
         classwise_ap_5095 = []
+        classwise_ar_5095 = []  
         
         for thresh_idx in range(len(self.iou_thresholds)):
             classwise_ap = [np.nan] * num_class
+            classwise_ar = [np.nan] * num_class  
             
             # computation for each IoU threshold
             for class_id in classes_with_gt:
@@ -670,8 +670,10 @@ class Detection(Recognition):
                 
                 if npos + ndet == 0: # no gt instance and no detection for the class
                     classwise_ap[class_id] = np.nan
+                    classwise_ar[class_id] = np.nan
                 elif npos>0 and len(hits)==0: # no detections but there are gt instances for the class
                     classwise_ap[class_id] = 0.0
+                    classwise_ar[class_id] = 0.0
                 else:
                     # Global sorting: sort hits by confidence in descending order
                     if len(conf) > 0 and len(conf) == len(hits):
@@ -704,17 +706,21 @@ class Detection(Recognition):
                                 ap += np.max(prec[mask]) / 11.0
                     
                     classwise_ap[class_id] = ap
+                    classwise_ar[class_id] = hits[-1] / npos if npos > 0 else 0.0
             
             classwise_ap_5095.append(classwise_ap)
+            classwise_ar_5095.append(classwise_ar)
         
-        # Calculate mAP50-95 as average across all IoU thresholds
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             classwise_ap_5095 = np.array(classwise_ap_5095)  # Shape: (num_thresholds, num_classes)
-            classwise_map_5095 = np.nanmean(classwise_ap_5095, axis=0)  # Average across IoU thresholds
-            mAP_5095 = np.nanmean(classwise_map_5095)  # Average across classes
+            classwise_ar_5095 = np.array(classwise_ar_5095)  # Shape: (num_thresholds, num_classes)
+            classwise_map_5095 = np.nanmean(classwise_ap_5095, axis=0)  
+            classwise_mar_5095 = np.nanmean(classwise_ar_5095, axis=0)  
+            mAP_5095 = np.nanmean(classwise_map_5095)  
+            mAR_5095 = np.nanmean(classwise_mar_5095)  
             
-        return classwise_map_5095, mAP_5095
+        return classwise_map_5095, mAP_5095, classwise_mar_5095, mAR_5095
     
     def compute_video_AP(self, component="ivt", style="coco"):
         classwise_ap    = []
@@ -761,9 +767,11 @@ class Detection(Recognition):
         if self.enable_map5095:
             ap_5095_result = self.compute_video_AP_5095(component=component, style=style)
             if ap_5095_result is not None:
-                classwise_ap_5095, mAP_5095 = ap_5095_result
+                classwise_ap_5095, mAP_5095, classwise_ar_5095, mAR_5095 = ap_5095_result
                 result["AP_5095"] = classwise_ap_5095
                 result["mAP_5095"] = mAP_5095
+                result["AR_5095"] = classwise_ar_5095
+                result["mAR_5095"] = mAR_5095
         
         return result
     
@@ -772,19 +780,23 @@ class Detection(Recognition):
             return None
             
         classwise_ap_5095 = []
+        classwise_ar_5095 = []
         for j in range(self.video_count):
             video_id = j+1
             ap_5095_result = self.compute_5095(component=component, video_id=video_id, style=style)
             if ap_5095_result is not None:
-                classwise_map_5095, mAP_5095 = ap_5095_result
+                classwise_map_5095, mAP_5095, classwise_mar_5095, mAR_5095 = ap_5095_result
                 classwise_ap_5095.append(classwise_map_5095)
+                classwise_ar_5095.append(classwise_mar_5095)
         
         if classwise_ap_5095:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 classwise_ap_5095 = np.nanmean(np.stack(classwise_ap_5095, axis=0), axis=0)
+                classwise_ar_5095 = np.nanmean(np.stack(classwise_ar_5095, axis=0), axis=0)
                 mAP_5095 = np.nanmean(classwise_ap_5095)
-            return classwise_ap_5095, mAP_5095
+                mAR_5095 = np.nanmean(classwise_ar_5095)
+            return classwise_ap_5095, mAP_5095, classwise_ar_5095, mAR_5095
         return None
     
     def compute_AP(self, component="ivt", style="coco"):
@@ -797,9 +809,11 @@ class Detection(Recognition):
         if self.enable_map5095:
             ap_5095_result = self.compute_5095(component=component, video_id=None, style=style)
             if ap_5095_result is not None:
-                classwise_map_5095, mAP_5095 = ap_5095_result
+                classwise_map_5095, mAP_5095, classwise_mar_5095, mAR_5095 = ap_5095_result
                 result["AP_5095"] = classwise_map_5095
                 result["mAP_5095"] = mAP_5095
+                result["AR_5095"] = classwise_mar_5095
+                result["mAR_5095"] = mAR_5095
         
         return result
         
@@ -809,13 +823,14 @@ class Detection(Recognition):
         result = {"AP":a[0], "mAP":a[1], "Rec":r[0], "mRec":r[1], "Pre":p[0], "mPre":p[1], "F1":f1[0], "mF1":f1[1],
                 "lm":lm, "plm":plm, "ids":ids, "idm":idm, "mil":mil, "fp":fp, "fn":fn,}
         
-        # Add mAP50-95 if enabled
         if self.enable_map5095:
             ap_5095_result = self.compute_5095(component=component, video_id=-1, style=style)
             if ap_5095_result is not None:
-                classwise_map_5095, mAP_5095 = ap_5095_result
+                classwise_map_5095, mAP_5095, classwise_mar_5095, mAR_5095 = ap_5095_result
                 result["AP_5095"] = classwise_map_5095
                 result["mAP_5095"] = mAP_5095
+                result["AR_5095"] = classwise_mar_5095
+                result["mAR_5095"] = mAR_5095
         
         return result
 # %%

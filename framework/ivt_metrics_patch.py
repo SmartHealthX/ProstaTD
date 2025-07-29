@@ -31,22 +31,13 @@ except ImportError as e:
 
 
 class TripletMapper:
-    """Triplet mapper for converting triplet IDs to instrument IDs"""
-    
     def __init__(self, mapping_file):
-        """
-        Initialize the mapper
-        
-        Args:
-            mapping_file (str): Path to the mapping file (required)
-        """
         if not mapping_file:
             raise ValueError("mapping_file parameter is required")
         self.triplet_to_instrument = {}
         self.load_mapping(mapping_file)
     
     def load_mapping(self, mapping_file):
-        """Load triplet to instrument mapping"""
         try:
             mapping_path = Path(mapping_file)
             if not mapping_path.exists():
@@ -70,12 +61,10 @@ class TripletMapper:
             raise
     
     def get_instrument_id(self, triplet_id):
-        """Get instrument ID for the given triplet ID"""
-        return self.triplet_to_instrument.get(triplet_id, 0)  # Default to 0
+        return self.triplet_to_instrument.get(triplet_id, 0) 
 
 
 class IVTMetricsValidator(DetectionValidator):
-    """Extended DetectionValidator with IVT metrics calculation functionality"""
     
     def __init__(self, *args, mapping_file=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -223,14 +212,16 @@ class IVTMetricsValidator(DetectionValidator):
             i_results = self.ivt_detector.compute_video_AP('i', style="coco")
             
             stats.update({
-                'ivt/mAP': ivt_results.get('mAP', 0.0),
-                'ivt/mRecall': ivt_results.get('mRec', 0.0),
-                'ivt/mPrecision': ivt_results.get('mPre', 0.0),
-                'ivt/mAP_5095': ivt_results.get('mAP_5095', 0.0),
-                'i/mAP': i_results.get('mAP', 0.0),
-                'i/mRecall': i_results.get('mRec', 0.0),
-                'i/mPrecision': i_results.get('mPre', 0.0),
-                'i/mAP_5095': i_results.get('mAP_5095', 0.0),
+                'ivt/mAP@50': ivt_results.get('mAP', 0.0),
+                'ivt/Recall': ivt_results.get('mRec', 0.0),
+                'ivt/Precision': ivt_results.get('mPre', 0.0),
+                'ivt/mAP@50-95': ivt_results.get('mAP_5095', 0.0),
+                'ivt/AR': ivt_results.get('mAR_5095', 0.0),
+                'i/mAP@50': i_results.get('mAP', 0.0),
+                'i/Recall': i_results.get('mRec', 0.0),
+                'i/Precision': i_results.get('mPre', 0.0),
+                'i/mAP@50-95': i_results.get('mAP_5095', 0.0),
+                'i/AR': i_results.get('mAR_5095', 0.0),
             })
         
         return stats
@@ -239,8 +230,7 @@ class IVTMetricsValidator(DetectionValidator):
         """Print YOLO results and IVT metrics"""
         # Call original print_results
         super().print_results()
-        
-        # Print IVT results
+
         if self.ivt_enabled and self.ivt_detector is not None:
             LOGGER.info("\n" + "="*50)
             LOGGER.info("IVT Triplet Detection Results")
@@ -252,28 +242,24 @@ class IVTMetricsValidator(DetectionValidator):
                 ('i', 'I (Instrument)', 'Instrument only')
             ]
             
-            LOGGER.info(f"{'Component':<15} {'mAP':<8} {'mRec':<8} {'mPre':<8} {'mF1':<8} {'mAP95':<8}")
-            LOGGER.info("-" * 58)
+            LOGGER.info(f"{'Component':<15} {'mAP@50':<8} {'Rec':<8} {'Pre':<8} {'F1':<8} {'mAP@50-95':<10} {'AR':<8}")
+            LOGGER.info("-" * 68)
             
             for comp_code, comp_name, description in components:
                 results = self.ivt_detector.compute_video_AP(comp_code, style="coco")
                 mAP = results.get('mAP', 0.0)
                 mRec = results.get('mRec', 0.0)
                 mPre = results.get('mPre', 0.0)
-                
-                # Use F1 from ivtdmetrics results (like ultralytics)
                 mF1 = results.get('mF1', 0.0)
-                
-                # Get mAP50-95 result
                 mAP_5095 = results.get('mAP_5095', 0.0)
+                mAR_5095 = results.get('mAR_5095', 0.0)
                 
-                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f} {mF1:<8.4f} {mAP_5095:<8.4f}")
+                LOGGER.info(f"{comp_name:<15} {mAP:<8.4f} {mRec:<8.4f} {mPre:<8.4f} {mF1:<8.4f} {mAP_5095:<10.4f} {mAR_5095:<8.4f}")
             
-            LOGGER.info("="*58)
+            LOGGER.info("="*68)
 
 
 def apply_patch(mapping_file=None):
-    """Apply IVT metrics patch"""
     if not IVTMETRICS_AVAILABLE:
         print("Warning: ivtmetrics not available, skipping patch application")
         return False
