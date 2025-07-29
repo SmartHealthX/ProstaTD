@@ -144,7 +144,7 @@ print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}")
 
 **mAP50-95 Evaluation**: Added mAP50-95 result calculation
 
-**AR@max_det Evaluation**: Added AR@max_det calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet should be under 100, making AR@max_det == AR@100.
+**AR@max_det Evaluation**: Added AR@max_det calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet is supposed to be under 100, making AR@max_det equal to AR@100.
 
 **Bug Fixes**: Fixed various bugs likse list2stack function
 
