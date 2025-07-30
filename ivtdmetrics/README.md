@@ -129,7 +129,6 @@ print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}")
 
 ## To-Do List
 - ✅ Release package
-- ⭕️ **AR metric for DETR-based models** 
 - ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
 - ⭕️ **Triplet Tracking Metric** 
 
