@@ -89,10 +89,10 @@ global_ap_ivt = detector.compute_global_AP(component="ivt", style="coco")
 video_ap_i = detector.compute_video_AP(component="i", style="coco")
 global_ap_i = detector.compute_global_AP(component="i", style="coco")
 
-print(f"IVT Video-wise mAP@50:  {video_ap_ivt['mAP']:.4f}")
-print(f"IVT Global mAP@50:      {global_ap_ivt['mAP']:.4f}")
-print(f"I Video-wise mAP@50:    {video_ap_i['mAP']:.4f}")
-print(f"I Global mAP@50:        {global_ap_i['mAP']:.4f}") 
+print(f"IVT Video-wise mAP@50:    {video_ap_ivt['mAP']:.4f}")
+print(f"IVT Global mAP@50:        {global_ap_ivt['mAP']:.4f}")
+print(f"I Video-wise mAP@50:      {video_ap_i['mAP']:.4f}")
+print(f"I Global mAP@50:          {global_ap_i['mAP']:.4f}") 
 print(f"IVT Video-wise mAP@5095:  {video_ap_ivt['mAP_5095']:.4f}")
 print(f"IVT Global mAP@5095:      {global_ap_ivt['mAP_5095']:.4f}")
 print(f"I Video-wise mAP@5095:    {video_ap_i['mAP_5095']:.4f}")
@@ -129,8 +129,7 @@ print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}")
 
 ## To-Do List
 - ✅ Release package
-- ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
-- ⭕️ **Triplet Tracking Metric** 
+- ⭕️ **Component Disentanglement**: Currently, we have not fully implemented component filtering features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks. 
 
 ## Enhancements
 **Global Confidence Ranking**: Implemented global confidence score ranking for mAP calculation instead of image-level ranking
