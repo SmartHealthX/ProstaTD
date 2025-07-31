@@ -45,12 +45,14 @@ To report errors or suggest improvements, please open an issue on our GitHub rep
 
 ### Download Access:
 To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L9).
+Early Access: The latest **ProstaTD v2.0** has expanded annotations to 70k+ frames with full annotations (the form is temporarily unavailable for v2.0 access; you need to submit an email with a detailed plan for manual review)
 
 **Important Notes:**  
 🔹 **Recommended Email**: Advice use **Gmail**​​ for submission (other emails may find the reply in spam folders).  
 🔹 **Response Time**: If you haven't received access instructions within **one hour**, please send a follow-up email to us with subject "ProstaTD Access Request - [Your Name]". We'll manually process your request and send the download link within **2 business days**. 
 
 ## News
+- [ **31/07/2025** ]: Release of the ProstaTDv2.0 dataset.
 - [ **02/06/2025** ]: Release of the ProstaTDv1.1 dataset on GitHub, which includes minor annotation corrections.
 - [ **16/05/2025** ]: Release of the ProstaTDv1.0 dataset on kaggle.
 
