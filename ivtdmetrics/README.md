@@ -33,7 +33,7 @@ Detection data should be provided as lists of detections per frame:
 - **List format (7 elements)**: `[[tripletID, toolID, Confidences, x, y, w, h], [tripletID, toolID, Confidences, x, y, w, h], ...]`
 - **List format (9 elements)**: `[[tripletID, toolID, Confidences, verbID, targetID, x, y, w, h], [tripletID, toolID, Confidences, verbID, targetID, x, y, w, h], ...]`
 
-**Note**: The system automatically detects the input format. Use 7-element format for IVT+I evaluation only (faster), or 9-element format for full IVT+I+V+T evaluation.
+**Note**: The system automatically detects the input format. Use 7-element format for IVT+I evaluation only, or 9-element format for full IVT+I+V+T evaluation.
 
 #### Supported Components
 
