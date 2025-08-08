@@ -164,7 +164,7 @@ for component in components:
 
 # Display comprehensive results
 print("=" * 80)
-print(f"{'Metric Type':<12} {'Component':<9} {'mAP@50':<8} {'mAP@50-95':<10} {'Precision':<10} {'Recall':<8} {'F1':<8} {'AR@50-95':<10}")
+print(f"{'Metric Type':<12} {'Component':<9} {'mAP@50':<8} {'mAP@50-95':<10} {'Precision':<10} {'Recall':<8} {'F1':<8} {'AR':<10}")
 print("-" * 80)
 
 for component in components:
