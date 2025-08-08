@@ -1,102 +1,218 @@
-# ProstaTD
+# IVTDMetrics
 
-### **ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection**
-*Yiliang Chen, Zhixi Li, Cheng Xu, Alex Qinyang Liu, Xuemiao Xu, Jeremy Yuen-Chun Teoh, Shengfeng He, Jing Qin*
+An extended metrics package for surgical triplet detection.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2506.01130-b31b1b.svg?style=plastic)](https://arxiv.org/pdf/2506.01130)
+## Overview
 
+**IVTDMetrics** This package provides more accurate evaluation metrics for surgical triplet detection.
 
-## Abstract
-<div align="center">
-  <img src="images/dataset.png" width="90%"/>
-</div><br/>
+## Features
 
-ProstaTD is a large-scale surgical triplet detection dataset curated from 21 robot-assisted prostatectomy videos, collectively spanning full surgical procedures across multiple institutions, featuring 60,529 annotated frames with 165,567 structured surgical triplet instances (instrument-verb-target) that provide precise bounding box localization for all instruments alongside clinically validated temporal action boundaries. The dataset incorporates the [ESAD](https://saras-esad.grand-challenge.org/download/) and [PSI-AVA](https://github.com/BCV-Uniandes/TAPIR) datasets with our own added annotations (without using the original data annotations). We also include our own collected videos. It delivers instance-level annotations for 7 instrument types, 10 actions, 10 anatomical/non-anatomical targets, and 89 triplet combinations (excluding background). The dataset is partitioned into training (14 videos), validation (2 videos), and test sets (5 videos), with annotations provided at 1 frame per second.
+- **Recognition Metrics**: Same as ivtmetrics, compute Average Precision (AP) for multi-label classification tasks
+- **Detection Metrics**: Evaluate object detection performance with IoU-based matching
 
-### Dataset Format
-Each instance within every frame of the dataset video is represented as a 10-value tuple:   
-**"frame_id": [triplet_id, instrument_id, verb_id, target_id, track_id, triplet_track_id, cx, cy, w, h]**
+## Installation
 
-| Position | Field Name        | Description                                                                 | Current Status               |
-|---------|-------------------|-----------------------------------------------------------------------------|-------------------------------|
-| 0       | Triplet ID        | Unique identifier for the (instrument, verb, target) triplet                | **Available**                 |
-| 1       | Instrument ID     | Identifier for the instrument (subject) in the triplet                     | **Available**                  |
-| 2       | Verb ID           | Identifier for the action verb connecting instrument and target             | **Available**                 |
-| 3       | Target ID         | Identifier for the target (object) in the triplet                           | **Available**                 |
-| 4       | Track ID          | Unique identifier for instrument tracking in video                          | *Pending*                     |
-| 5       | Triplet Track ID  | Unique identifier for full triplet instance tracking                        | *Pending*                     |
-| 6       | cx                | Normalized bounding box center x-coordinate (0-1 range)                     | *Pending*                     |
-| 7       | cy                | Normalized bounding box center y-coordinate (0-1 range)                     | *Pending*                     |
-| 8       | w                 | Normalized bounding box width (0-1 range)                                  | *Pending*                      |
-| 9       | h                 | Normalized bounding box height (0-1 range)                                 | *Pending*                      |
+### From source
 
-**Key Notes:**
-1. Positions 0-3 contain currently available data
-2. Positions 4-9 will be released soon
-3. All pending fields currently use placeholder value `-1`
-4. Bounding box coordinates (cx, cy, w, h) are normalized to [0,1] range relative to frame dimensions
-5. Some frames were removed due to non-surgical scenes or adverse environmental factors (e.g., extreme reflection); overall, the frames are visually continuous​
+```bash
+cd ivtdmetrics
+pip install -e ./
+```
 
-### Usage
-If you want to try using this dataset on your model, please refer to the [training example](https://github.com/SmartHealthX/ProstaTD/tree/main/framework) and [benchmarking package](https://github.com/SmartHealthX/ProstaTD/tree/main/ivtdmetrics)
+### Requirements
 
-### Contact: 
-To report errors or suggest improvements, please open an issue on our GitHub repository or email dataset.smarthealth@gmail.com. All valid corrections will be incorporated in future releases. The ProstaTD dataset will be actively maintained and updated by the authors to ensure long-term accessibility and support ongoing research.
+- Python >= 3.6
+- numpy >= 1.21
 
-### Download Access:
-To request access to the ProstaTD Dataset, please fill out our [request form](https://forms.gle/W8aGcb5c48YCXV1L9).
+## Quick Start
 
-Early Access: The latest **ProstaTD v2.0** has expanded annotations to 70k+ frames with full annotations (the form is temporarily unavailable for v2.0 access; you need to submit an email with a detailed plan for manual review)
+#### Input Format
 
-**Important Notes:**  
-🔹 **Recommended Email**: Advice use **Gmail**​​ for submission (other emails may find the reply in spam folders).  
-🔹 **Response Time**: If you haven't received access instructions within **one hour**, please send a follow-up email to us with subject "ProstaTD Access Request - [Your Name]". We'll manually process your request and send the download link within **2 business days**. 
+Detection data should be provided as lists of detections per frame:
+- **List format (7 elements)**: `[[tripletID, toolID, Confidences, x, y, w, h], [tripletID, toolID, Confidences, x, y, w, h], ...]`
+- **List format (9 elements)**: `[[tripletID, toolID, Confidences, verbID, targetID, x, y, w, h], [tripletID, toolID, Confidences, verbID, targetID, x, y, w, h], ...]`
 
-## News
-- [ **31/07/2025** ]: Release of the ProstaTDv2.0 dataset.
-- [ **02/06/2025** ]: Release of the ProstaTDv1.1 dataset on GitHub, which includes minor annotation corrections.
-- [ **16/05/2025** ]: Release of the ProstaTDv1.0 dataset on kaggle.
+**Note**: The system automatically detects the input format. Use 7-element format for IVT+I evaluation only (faster), or 9-element format for full IVT+I+V+T evaluation.
 
-## To-Do List
-- ✅ Release classification labels
-- ✅ Release new [ivtdmetrics](https://github.com/SmartHealthX/ProstaTD/blob/main/ivtdmetrics) metric tool  
-  *([ivtmetrics](https://github.com/CAMMA-public/ivtmetrics) not compatible with Triplet Detection)*
-- ✅ Provide [training examples](https://github.com/SmartHealthX/ProstaTD/blob/main/framework) on ProstaTD 
-- ⭕️ Release bounding box annotations and preprocessing scripts
-- ⭕️ Release raw LabelMe JSON files and annotation tool for visualization
-- ⭕️ Release raw 30fps frames and track ID annotations for tracking
-- ⭕️ Release raw video
+#### Supported Components
 
-## Examples
+- `"ivt"`: Instrument-Verb-Target (full triplet)
+- `"i"`: Instrument only
+- `"v"`: Verb only
+- `"t"`: Target only
 
-<table>
-  <tr>
-    <td><center><img src="images/example1.png" width="100%"></center></td>
-    <td><center><img src="images/example2.png" width="100%"></center></td>
-  </tr>
-  <tr>
-    <td><center>Our custom labelme annotation example</center></td>
-    <td><center>Our labeltri annotation example</center></td>
-  </tr>
-</table>
+#### Multi-Video Detection Evaluation Example
 
-Some classification results of our ProstaTD (Prostate21) can be found at [SurgVISTA](https://arxiv.org/pdf/2506.02692)
+```python
+from ivtdmetrics.detection import Detection
+import numpy as np
 
+# Test data
+video1_targets = [
+    [[0, 1, 1.0, 0.1, 0.1, 0.2, 0.2], [1, 2, 1.0, 0.5, 0.5, 0.2, 0.2]],
+    [[2, 3, 1.0, 0.3, 0.3, 0.2, 0.2]]
+]
 
-## Usage Restrictions
-The dataset and its annotations are intended for academic research purposes only and must not be used for commercial purposes. If the dataset is used to train models or LLMs, the output must include a warning prompt stating that the results are generated based on experimental data and should not be used for actual surgical environment without further validation. Additionally, these models must be used under human supervision to ensure safety and accuracy.
+video1_predictions = [
+    [[0, 1, 0.9, 0.1, 0.1, 0.2, 0.2], [1, 2, 0.8, 0.7, 0.7, 0.1, 0.1], [3, 4, 0.7, 0.8, 0.8, 0.1, 0.1]],
+    []
+]
 
-## License
-This repository is available for non-commercial scientific research purposes as defined in the [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+video2_targets = [
+    [[2, 5, 1.0, 0.1, 0.1, 0.3, 0.3]],
+    [[4, 5, 1.0, 0.2, 0.2, 0.3, 0.3]]
+]
+
+video2_predictions = [
+    [[2, 5, 0.9, 0.1, 0.1, 0.3, 0.3], [6, 2, 0.5, 0.8, 0.8, 0.1, 0.1]],
+    [[4, 5, 0.95, 0.2, 0.2, 0.3, 0.3], [7, 1, 0.4, 0.6, 0.6, 0.1, 0.1]]
+]
+
+video3_targets = [
+    [[8, 0, 1.0, 0.0, 0.0, 0.3, 0.3], [9, 1, 1.0, 0.4, 0.4, 0.2, 0.2], [10, 2, 1.0, 0.7, 0.7, 0.2, 0.2]],
+    [[11, 3, 1.0, 0.1, 0.1, 0.4, 0.4]]
+]
+
+video3_predictions = [
+    [[8, 0, 0.9, 0.0, 0.0, 0.3, 0.3], [9, 1, 0.8, 0.45, 0.45, 0.15, 0.15], [12, 4, 0.6, 0.8, 0.8, 0.1, 0.1]],
+    [[11, 3, 0.85, 0.15, 0.15, 0.35, 0.35], [11, 3, 0.7, 0.2, 0.2, 0.3, 0.3]]
+]
+
+all_targets = [video1_targets, video2_targets, video3_targets]
+all_predictions = [video1_predictions, video2_predictions, video3_predictions]
+
+detector = Detection(num_class=89, num_tool=7)
+
+for video_idx, (targets, predictions) in enumerate(zip(all_targets, all_predictions)):
+    detector.update(targets, predictions, format="list")
+    detector.video_end()
+
+# style = "coco" is default setting
+video_ap_ivt = detector.compute_video_AP(component="ivt", style="coco")
+global_ap_ivt = detector.compute_global_AP(component="ivt", style="coco")
+video_ap_i = detector.compute_video_AP(component="i", style="coco")
+global_ap_i = detector.compute_global_AP(component="i", style="coco")
+
+print(f"IVT Video-wise mAP@50:    {video_ap_ivt['mAP']:.4f}")
+print(f"IVT Global mAP@50:        {global_ap_ivt['mAP']:.4f}")
+print(f"I Video-wise mAP@50:      {video_ap_i['mAP']:.4f}")
+print(f"I Global mAP@50:          {global_ap_i['mAP']:.4f}") 
+print(f"IVT Video-wise mAP@5095:  {video_ap_ivt['mAP_5095']:.4f}")
+print(f"IVT Global mAP@5095:      {global_ap_ivt['mAP_5095']:.4f}")
+print(f"I Video-wise mAP@5095:    {video_ap_i['mAP_5095']:.4f}")
+print(f"I Global mAP@5095:        {global_ap_i['mAP_5095']:.4f}") 
+```
+### Calculation ###
+
+**Note**: The Detection module does not support component disentanglement features such as `iv` (instrument-verb) and `it` (instrument-target) pair evaluations, as their practical significance may be limited for surgical triplet detection tasks.
+
+```python
+# Only calculate mAP@50
+detector = Detection(num_class=89, num_tool=7, enable_map5095=False)
+
+# Calculate both mAP@50 and mAP@50_95
+detector = Detection(num_class=89, num_tool=7)
+
+....
+....
+
+# Use ultralytics AP calculation
+results = detector.compute_video_AP(style="coco") # default
+
+# Use orginal AP calculation
+results = detector.compute_video_AP(style="11point")
+
+....
+....
+
+# Other metrics (based on optimal global F1 threshold)
+print(f"IVT Video-wise Rec: {video_ap_ivt['mRec']:.4f}") 
+print(f"IVT Video-wise Pre: {video_ap_ivt['mPre']:.4f}")
+print(f"IVT Video-wise F1:  {video_ap_ivt['mF1']:.4f}") 
+print(f"IVT Video-wise AR:  {video_ap_ivt['mAR_5095']:.4f}") 
+# LM, PLM.... are based on image-level conf ranking
+```
+
+#### Multi-Component Evaluation Example
+
+To evaluate all components (IVT, I, V, T) simultaneously, use the 9-element format and compute metrics for each component:
+
+```python
+from ivtdmetrics.detection import Detection
+
+detector = Detection(
+    num_class=89,    
+    num_tool=7,      
+    num_verb=10,     
+    num_target=15,  
+    threshold=0.5
+)
+
+# Process your data (targets and predictions should use 9-element format)
+# Format: [tripletID, toolID, confidence, verbID, targetID, x, y, w, h]
+for targets, predictions in zip(all_targets, all_predictions):
+    detector.update(targets, predictions, format="list")
+    detector.video_end()
+
+components = ["ivt", "i", "v", "t"]
+results = {}
+
+for component in components:
+    results[f"video_{component}"] = detector.compute_video_AP(component=component, style="coco")
+    results[f"global_{component}"] = detector.compute_global_AP(component=component, style="coco")
+
+# Display comprehensive results
+print("=" * 80)
+print(f"{'Metric Type':<12} {'Component':<9} {'mAP@50':<8} {'mAP@50-95':<10} {'Precision':<10} {'Recall':<8} {'F1':<8} {'AR@50-95':<10}")
+print("-" * 80)
+
+for component in components:
+    comp_name = component.upper()
+    video_result = results[f"video_{component}"]
+    global_result = results[f"global_{component}"]
+
+    print(f"{'Video-wise':<12} {comp_name:<9} {video_result.get('mAP', 0):<8.4f} {video_result.get('mAP_5095', 0):<10.4f} {video_result.get('mPre', 0):<10.4f} {video_result.get('mRec', 0):<8.4f} {video_result.get('mF1', 0):<8.4f} {video_result.get('mAR_5095', 0):<10.4f}")
+    print(f"{'Global':<12} {comp_name:<9} {global_result.get('mAP', 0):<8.4f} {global_result.get('mAP_5095', 0):<10.4f} {global_result.get('mPre', 0):<10.4f} {global_result.get('mRec', 0):<8.4f} {global_result.get('mF1', 0):<8.4f} {global_result.get('mAR_5095', 0):<10.4f}")
+
+print("-" * 80)
+```
+
+## Enhancements
+**Global Confidence Ranking**: Implemented global confidence score ranking for mAP calculation instead of image-level ranking
+
+**101-Point Interpolation**: Adopted 101-point interpolation for mAP calculation
+
+**Pseudo-Detection Handling**: Fixed calculation errors when handling pseudo-detections for scenarios where ground truth lacks certain classes but predictions include them.
+
+**Precision, Recall, and F1 Evaluation**: Added metrics based on a single optimal confidence threshold determined by maximizing F1 score. (this Recall differs from the AR calculation method)
+
+**mAP50-95 Evaluation**: Added mAP50-95 result calculation.
+
+**Support Component Verb and Target**: Added component Verb and Target calculation.
+
+**AR@max_det Evaluation**: Added Average Recall calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet is supposed to be under 100, making AR@max_det equal to AR@100.
+
+**Bug Fixes**: Fixed various bugs likse list2stack function.
 
 ## Citation
+
+If you use this package in your research, please cite:
+
 ```bibtex
-@article{chen2025prostatd,
-  title     = {ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection},
-  author    = {Yiliang Chen and Zhixi Li and Cheng Xu and Alex Qinyang Liu and Xuemiao Xu and Jeremy Yuen-Chun Teoh and Shengfeng He and Jing Qin},
-  journal   = {arXiv preprint arXiv:2506.01130},
-  year      = {2025}
+@misc{chen2025prostatd,
+      title={ProstaTD: A Large-scale Multi-source Dataset for Structured Surgical Triplet Detection}, 
+      author={Yiliang Chen and Zhixi Li and Cheng Xu and Alex Qinyang Liu and Xuemiao Xu and Jeremy Yuen-Chun Teoh and Shengfeng He and Jing Qin},
+      year={2025},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2506.01130}, 
 }
 ```
 
+## Acknowledgments
 
+This work is based on [ivtmetrics](https://github.com/CAMMA-public/ivtmetrics).
+
+## Contact
+
+For questions or issues, please open an issue on GitHub or contact the maintainer. 
