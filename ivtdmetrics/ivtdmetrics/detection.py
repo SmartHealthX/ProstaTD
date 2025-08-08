@@ -65,10 +65,12 @@ class Detection(Recognition):
     @format
         box format: [{"triplet":tid, "instrument":[tool, 1.0, x,y,w,h], "target":[]}]
     """
-    def __init__(self, num_class=100, num_tool=6, num_target=15, threshold=0.5, enable_map5095=True):
+    def __init__(self, num_class=100, num_tool=6, num_verb=10, num_target=15, threshold=0.5, enable_map5095=True):
         super(Recognition, self).__init__()
-        self.num_class      = num_class  
-        self.num_tool       = num_tool                
+        self.num_class      = num_class
+        self.num_tool       = num_tool
+        self.num_verb       = num_verb
+        self.num_target     = num_target
         self.classwise_ap   = []
         self.classwise_rec  = []
         self.classwise_prec = []
@@ -79,7 +81,7 @@ class Detection(Recognition):
         self.enable_map5095 = enable_map5095  # Renamed parameter to control mAP50-95 computation
         # IoU thresholds for mAP50-95 (0.5 to 0.95 in steps of 0.05)
         self.iou_thresholds = np.arange(0.5, 1.0, 0.05) if enable_map5095 else [threshold]
-        self.reset()        
+        self.reset()
                 
     def reset(self):
         self.video_count = 0
@@ -104,6 +106,8 @@ class Detection(Recognition):
             # Add hits for multiple IoU thresholds (for mAP50-95)
             "hits_5095": [[[] for _ in range(self.num_class)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
             "hits_i_5095": [[[] for _ in range(self.num_tool)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
+            "hits_v_5095": [[[] for _ in range(self.num_verb)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
+            "hits_t_5095": [[[] for _ in range(self.num_target)] for _ in range(num_thresholds)] if self.enable_map5095 else None,
             "fp": 0,
             "fn": 0,
             "lm": 0,
@@ -111,8 +115,16 @@ class Detection(Recognition):
             "ids": 0,
             "idm": 0,
             "mil": 0,
-            "conf": [[] for _ in range(self.num_class)], 
-            "conf_i": [[] for _ in range(self.num_tool)] 
+            "conf": [[] for _ in range(self.num_class)],
+            "conf_i": [[] for _ in range(self.num_tool)],
+            "hits_v":[[] for _ in range(self.num_verb)],
+            "ndet_v":[0  for _ in range(self.num_verb)],
+            "npos_v":[0  for _ in range(self.num_verb)],
+            "conf_v": [[] for _ in range(self.num_verb)],
+            "hits_t":[[] for _ in range(self.num_target)],
+            "ndet_t":[0  for _ in range(self.num_target)],
+            "npos_t":[0  for _ in range(self.num_target)],
+            "conf_t": [[] for _ in range(self.num_target)]
         }
     
     def xywh2xyxy(self, bb):
@@ -240,9 +252,18 @@ class Detection(Recognition):
         # Check if there is data
         gt_has_data = len(detection_gt) > 0 and len(detection_gt[0]) > 0
         pd_has_data = len(detection_pd) > 0 and len(detection_pd[0]) > 0
-        
+
         if not gt_has_data and not pd_has_data:
             return
+
+        # Auto-detect format based on input length
+        # 7 elements: [cls_id, tool_id, conf, x1, y1, w, h] - compute IVT + I only
+        # 9 elements: [cls_id, tool_id, conf, verb_id, target_id, x1, y1, w, h] - compute all components
+        compute_vt = False
+        if pd_has_data and len(detection_pd[0]) == 9:
+            compute_vt = True
+        elif gt_has_data and len(detection_gt[0]) == 9:
+            compute_vt = True
             
         detection_gt_ivt = detection_gt.copy()
         detection_pd_ivt = detection_pd.copy()
@@ -320,6 +341,87 @@ class Detection(Recognition):
                     if self.enable_map5095:
                         for thresh_idx in range(len(self.iou_thresholds)):
                             self.accumulator[self.video_count]["hits_i_5095"][thresh_idx][int(det_pd[1])].append(0.0)
+
+        # for verb component (index 3) - only if 8-element format
+        if compute_vt:
+            detection_gt_v = detection_gt.copy()
+            detection_pd_v = detection_pd.copy()
+            for gt in detection_gt_v:
+                if len(gt): self.accumulator[self.video_count]["npos_v"][int(gt[3])] += 1
+            for i, det_pd in enumerate(detection_pd_v):
+                if len(det_pd):
+                    self.accumulator[self.video_count]["ndet_v"][int(det_pd[3])] += 1
+                    matched = False
+                    for k, det_gt in enumerate(detection_gt_v):
+                        if len(det_gt):
+                            y = det_gt[3:]  # [verb_id, target_id, x1, y1, w, h]
+                            f = det_pd[3:]  # [verb_id, target_id, x1, y1, w, h]
+                            if self.is_match(y, f, threshold=self.threshold):
+                                detection_gt_v = np.delete(detection_gt_v, obj=k, axis=0)
+                                matched = True
+                                break
+                    if matched:
+                        self.accumulator[self.video_count]["hits_v"][int(det_pd[3])].append(1.0)
+                        self.accumulator[self.video_count]["conf_v"][int(det_pd[3])].append(pred_conf[i])  # Collect confidence
+
+                        # Add hits for multiple IoU thresholds (mAP50-95)
+                        if self.enable_map5095:
+                            # Use the same matched GT (y) and detection (f) for multi-IoU check
+                            matches = self.is_match_multi_iou(y, f, self.iou_thresholds)
+                            for thresh_idx, match in enumerate(matches):
+                                if match:
+                                    self.accumulator[self.video_count]["hits_v_5095"][thresh_idx][int(det_pd[3])].append(1.0)
+                                else:
+                                    self.accumulator[self.video_count]["hits_v_5095"][thresh_idx][int(det_pd[3])].append(0.0)
+                    else:
+                        self.accumulator[self.video_count]["hits_v"][int(det_pd[3])].append(0.0)
+                        self.accumulator[self.video_count]["conf_v"][int(det_pd[3])].append(pred_conf[i])  # Collect confidence
+
+                        # Add hits for multiple IoU thresholds (mAP50-95)
+                        if self.enable_map5095:
+                            for thresh_idx in range(len(self.iou_thresholds)):
+                                self.accumulator[self.video_count]["hits_v_5095"][thresh_idx][int(det_pd[3])].append(0.0)
+
+        # for target component (index 4) - only if 8-element format
+        if compute_vt:
+            detection_gt_t = detection_gt.copy()
+            detection_pd_t = detection_pd.copy()
+            for gt in detection_gt_t:
+                if len(gt): self.accumulator[self.video_count]["npos_t"][int(gt[4])] += 1
+            for i, det_pd in enumerate(detection_pd_t):
+                if len(det_pd):
+                    self.accumulator[self.video_count]["ndet_t"][int(det_pd[4])] += 1
+                    matched = False
+                    for k, det_gt in enumerate(detection_gt_t):
+                        if len(det_gt):
+                            y = det_gt[4:]  # [target_id, x1, y1, w, h]
+                            f = det_pd[4:]  # [target_id, x1, y1, w, h]
+                            if self.is_match(y, f, threshold=self.threshold):
+                                detection_gt_t = np.delete(detection_gt_t, obj=k, axis=0)
+                                matched = True
+                                break
+                    if matched:
+                        self.accumulator[self.video_count]["hits_t"][int(det_pd[4])].append(1.0)
+                        self.accumulator[self.video_count]["conf_t"][int(det_pd[4])].append(pred_conf[i])  # Collect confidence
+
+                        # Add hits for multiple IoU thresholds (mAP50-95)
+                        if self.enable_map5095:
+                            # Use the same matched GT (y) and detection (f) for multi-IoU check
+                            matches = self.is_match_multi_iou(y, f, self.iou_thresholds)
+                            for thresh_idx, match in enumerate(matches):
+                                if match:
+                                    self.accumulator[self.video_count]["hits_t_5095"][thresh_idx][int(det_pd[4])].append(1.0)
+                                else:
+                                    self.accumulator[self.video_count]["hits_t_5095"][thresh_idx][int(det_pd[4])].append(0.0)
+                    else:
+                        self.accumulator[self.video_count]["hits_t"][int(det_pd[4])].append(0.0)
+                        self.accumulator[self.video_count]["conf_t"][int(det_pd[4])].append(pred_conf[i])  # Collect confidence
+
+                        # Add hits for multiple IoU thresholds (mAP50-95)
+                        if self.enable_map5095:
+                            for thresh_idx in range(len(self.iou_thresholds)):
+                                self.accumulator[self.video_count]["hits_t_5095"][thresh_idx][int(det_pd[4])].append(0.0)
+
         # process association
         self.association(targets=detection_gt.copy(), predictions=detection_pd.copy())
         
@@ -474,18 +576,38 @@ class Detection(Recognition):
     def compute(self, component="ivt", video_id=None, style="coco"):
         if video_id == None: 
             video_id = self.video_count-1 if self.end_call else self.video_count
-        hit_str     = "hits" if component=="ivt" else "hits_i"
-        pos_str     = "npos" if component=="ivt" else "npos_i"
-        det_str     = "ndet" if component=="ivt" else "ndet_i"
-        num_class   = self.num_class if component=="ivt" else self.num_tool       
+        # Set component-specific strings and class count
+        if component == "ivt":
+            hit_str, pos_str, det_str = "hits", "npos", "ndet"
+            num_class = self.num_class
+        elif component == "i":
+            hit_str, pos_str, det_str = "hits_i", "npos_i", "ndet_i"
+            num_class = self.num_tool
+        elif component == "v":
+            hit_str, pos_str, det_str = "hits_v", "npos_v", "ndet_v"
+            num_class = self.num_verb
+        elif component == "t":
+            hit_str, pos_str, det_str = "hits_t", "npos_t", "ndet_t"
+            num_class = self.num_target
+        else:
+            raise ValueError(f"Unknown component: {component}. Must be one of: 'ivt', 'i', 'v', 't'")
         # decide on accumulator for framewise / video wise / current
         if video_id == -1: # global AP
             accumulator = {}
-            accumulator[hit_str] = [sum([p[k]for p in [self.accumulator[f][hit_str] for f in self.accumulator] ],[]) for k in range(num_class)]            
-            accumulator[pos_str] = list(np.sum(np.stack([self.accumulator[f][pos_str] for f in self.accumulator]), axis=0))       
+            accumulator[hit_str] = [sum([p[k]for p in [self.accumulator[f][hit_str] for f in self.accumulator] ],[]) for k in range(num_class)]
+            accumulator[pos_str] = list(np.sum(np.stack([self.accumulator[f][pos_str] for f in self.accumulator]), axis=0))
             accumulator[det_str] = list(np.sum(np.stack([self.accumulator[f][det_str] for f in self.accumulator]), axis=0))
             # Merge confidence information for global AP calculation
-            conf_str = "conf" if component=="ivt" else "conf_i"
+            if component == "ivt":
+                conf_str = "conf"
+            elif component == "i":
+                conf_str = "conf_i"
+            elif component == "v":
+                conf_str = "conf_v"
+            elif component == "t":
+                conf_str = "conf_t"
+            else:
+                conf_str = "conf"
             accumulator[conf_str] = [sum([p[k]for p in [self.accumulator[f][conf_str] for f in self.accumulator] ],[]) for k in range(num_class)]
             # Merge association metrics for global AP calculation
             for key in ["fp", "fn", "lm", "plm", "ids", "idm", "mil"]:
@@ -516,7 +638,16 @@ class Detection(Recognition):
             hits, npos, ndet = accumulator[hit_str][class_id], accumulator[pos_str][class_id], accumulator[det_str][class_id]
             
             # Get corresponding confidence
-            conf_str = "conf" if component=="ivt" else "conf_i"
+            if component == "ivt":
+                conf_str = "conf"
+            elif component == "i":
+                conf_str = "conf_i"
+            elif component == "v":
+                conf_str = "conf_v"
+            elif component == "t":
+                conf_str = "conf_t"
+            else:
+                conf_str = "conf"
             conf = accumulator[conf_str][class_id] if conf_str in accumulator else []
             
             if npos + ndet == 0: # no gt instance and no detection for the class
@@ -629,10 +760,21 @@ class Detection(Recognition):
             
         if video_id == None: 
             video_id = self.video_count-1 if self.end_call else self.video_count
-        hit_str     = "hits_5095" if component=="ivt" else "hits_i_5095"
-        pos_str     = "npos" if component=="ivt" else "npos_i"
-        det_str     = "ndet" if component=="ivt" else "ndet_i"
-        num_class   = self.num_class if component=="ivt" else self.num_tool
+        # Set component-specific strings and class count
+        if component == "ivt":
+            hit_str, pos_str, det_str = "hits_5095", "npos", "ndet"
+            num_class = self.num_class
+        elif component == "i":
+            hit_str, pos_str, det_str = "hits_i_5095", "npos_i", "ndet_i"
+            num_class = self.num_tool
+        elif component == "v":
+            hit_str, pos_str, det_str = "hits_v_5095", "npos_v", "ndet_v"
+            num_class = self.num_verb
+        elif component == "t":
+            hit_str, pos_str, det_str = "hits_t_5095", "npos_t", "ndet_t"
+            num_class = self.num_target
+        else:
+            raise ValueError(f"Unknown component: {component}. Must be one of: 'ivt', 'i', 'v', 't'")
         
         # decide on accumulator for framewise / video wise / current
         if video_id == -1: # global AP
@@ -642,7 +784,16 @@ class Detection(Recognition):
             accumulator[pos_str] = list(np.sum(np.stack([self.accumulator[f][pos_str] for f in self.accumulator]), axis=0))       
             accumulator[det_str] = list(np.sum(np.stack([self.accumulator[f][det_str] for f in self.accumulator]), axis=0))
             # Merge confidence information for global AP calculation
-            conf_str = "conf" if component=="ivt" else "conf_i"
+            if component == "ivt":
+                conf_str = "conf"
+            elif component == "i":
+                conf_str = "conf_i"
+            elif component == "v":
+                conf_str = "conf_v"
+            elif component == "t":
+                conf_str = "conf_t"
+            else:
+                conf_str = "conf"
             accumulator[conf_str] = [sum([p[k]for p in [self.accumulator[f][conf_str] for f in self.accumulator] ],[]) for k in range(num_class)]
         else:
              accumulator = self.accumulator[video_id]
@@ -665,7 +816,16 @@ class Detection(Recognition):
                 hits, npos, ndet = accumulator[hit_str][thresh_idx][class_id], accumulator[pos_str][class_id], accumulator[det_str][class_id]
                 
                 # Get corresponding confidence
-                conf_str = "conf" if component=="ivt" else "conf_i"
+                if component == "ivt":
+                    conf_str = "conf"
+                elif component == "i":
+                    conf_str = "conf_i"
+                elif component == "v":
+                    conf_str = "conf_v"
+                elif component == "t":
+                    conf_str = "conf_t"
+                else:
+                    conf_str = "conf"
                 conf = accumulator[conf_str][class_id] if conf_str in accumulator else []
                 
                 if npos + ndet == 0: # no gt instance and no detection for the class
