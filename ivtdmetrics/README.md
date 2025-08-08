@@ -145,7 +145,7 @@ detector = Detection(
     num_class=89,    
     num_tool=7,      
     num_verb=10,     
-    num_target=15,  
+    num_target=10,  
     threshold=0.5
 )
 
