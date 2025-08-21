@@ -191,7 +191,7 @@ print("-" * 80)
 
 **Support Component Verb and Target**: Added component Verb and Target calculation.
 
-**AR@max_det Evaluation**: Added Average Recall calculation. In surgical video detection, the number of tools rarely exceeds 7 per frame. For properly functioning detectors in surgical triplet tasks, ndet is supposed to be under 100, making AR@max_det equal to AR@100.
+**AR@max_det Evaluation** (not recommended): Added Average Recall calculation. In the evaluation of **ultralytics**, mAP is often computed after filtering predictions, whereas in the **COCO eval API**, the inputs are taken **before filtering**, from which AR@100 and similar metrics are then calculated. This inconsistency makes alignment difficult, so we recommend using **Recall** and **F1-score** instead of AR.
 
 **Bug Fixes**: Fixed various bugs likse list2stack function.
 
